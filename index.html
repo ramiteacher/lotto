@@ -358,6 +358,33 @@
             50% { transform: translateY(-40px) scale(1.2); }
             100% { transform: translateY(0) scale(1); }
         }
+
+        /* 사운드 컨트롤 버튼 스타일 추가 */
+        .sound-control {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        .sound-icon {
+            width: 24px;
+            height: 24px;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0zIDloNGw1LTVzMSAxIDEgNHYxMGMwIDMtMSA0LTEgNEw3IDE1SDN6Ii8+PHBhdGggZD0iTTE2LjUgMTJjMC0xLjgtMS0zLjMtMi41LTQiLz48cGF0aCBkPSJNMTkuNSAxMmMwLTMuMS0xLjctNS43LTQuMi03LjEiIHN0cm9rZT0id2hpdGUiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNMjEuNSAxMmMwLTQuMy0yLjQtOC4xLTYtMTAiIHN0cm9rZT0id2hpdGUiIGZpbGw9Im5vbmUiLz48L3N2Zz4=');
+            background-size: contain;
+        }
+
+        .sound-icon.muted {
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0zIDloNGw1LTVzMSAxIDEgNHYxMGMwIDMtMSA0LTEgNEw3IDE1SDN6Ii8+PHBhdGggZD0iTTE2IDE2bDYtNm0wIDZsLTYtNiIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+PC9zdmc+');
+        }
     </style>
 </head>
 <body>
@@ -365,6 +392,9 @@
     
     <div class="lottery-machine" id="lotteryMachine">
         <!-- 이 안에 동적으로 요소들이 추가됩니다 -->
+        <div class="sound-control" id="soundControl">
+            <div class="sound-icon" id="soundIcon"></div>
+        </div>
     </div>
     
     <div class="result-container" id="resultContainer">
@@ -375,6 +405,25 @@
         <button id="startBtn">추첨 시작</button>
         <button id="resetBtn">다시하기</button>
     </div>
+    
+    <!-- 오디오 요소 부분만 변경합니다 -->
+
+<!-- 기존 오디오 요소를 다음으로 변경 -->
+<audio id="machineSound" loop preload="auto">
+    <source src="m.mp3" type="audio/mpeg">
+</audio>
+
+<audio id="ballDropSound" preload="auto">
+    <source src="https://freesound.org/data/previews/411/411088_5121236-lq.mp3" type="audio/mpeg">
+</audio>
+
+<audio id="resultSound" preload="auto">
+    <source src="https://freesound.org/data/previews/320/320654_5260872-lq.mp3" type="audio/mpeg">
+</audio>
+
+<audio id="startSound" preload="auto">
+    <source src="https://freesound.org/data/previews/466/466617_10062900-lq.mp3" type="audio/mpeg">
+</audio>
 
     <script>
     // 색상 배열 (로또 번호 색상)
@@ -393,14 +442,32 @@
     let animationFrameId = null;
     let machineElements = {};
     
+    // 사운드 관련 변수
+    let soundEnabled = true;
+    let machineSound, ballDropSound, resultSound, startSound;
+    
     // DOM 요소 참조 캐싱
     function cacheElements() {
         machineElements = {
             lotteryMachine: document.getElementById('lotteryMachine'),
             resultContainer: document.getElementById('resultContainer'),
             startBtn: document.getElementById('startBtn'),
-            resetBtn: document.getElementById('resetBtn')
+            resetBtn: document.getElementById('resetBtn'),
+            soundControl: document.getElementById('soundControl'),
+            soundIcon: document.getElementById('soundIcon')
         };
+        
+        // 오디오 요소 캐싱
+        machineSound = document.getElementById('machineSound');
+        ballDropSound = document.getElementById('ballDropSound');
+        resultSound = document.getElementById('resultSound');
+        startSound = document.getElementById('startSound');
+        
+        // 볼륨 조정
+        machineSound.volume = 0.3;
+        ballDropSound.volume = 0.5;
+        resultSound.volume = 0.5;
+        startSound.volume = 0.3;
     }
     
     // 볼 색상 가져오기
@@ -425,9 +492,31 @@
             animationFrameId = null;
         }
         
+        // 사운드 중지
+        machineSound.pause();
+        machineSound.currentTime = 0;
+        ballDropSound.pause();
+        ballDropSound.currentTime = 0;
+        resultSound.pause();
+        resultSound.currentTime = 0;
+        startSound.pause();
+        startSound.currentTime = 0;
+        
         // 기존 내용 초기화
         lotteryMachine.innerHTML = '';
         balls = [];
+        
+        // 사운드 컨트롤 다시 추가
+        const soundControl = document.createElement('div');
+        soundControl.className = 'sound-control';
+        soundControl.id = 'soundControl';
+        
+        const soundIcon = document.createElement('div');
+        soundIcon.className = soundEnabled ? 'sound-icon' : 'sound-icon muted';
+        soundIcon.id = 'soundIcon';
+        
+        soundControl.appendChild(soundIcon);
+        lotteryMachine.appendChild(soundControl);
         
         // 기계 구성요소 생성 (최적화: 단일 함수로 묶음)
         createMachineComponents(lotteryMachine);
@@ -439,6 +528,10 @@
         isAnimating = true;
         drawingInProgress = false;
         animateBalls();
+        
+        // 이벤트 리스너 재설정
+        cacheElements();
+        setupEventListeners();
     }
     
     // 기계 구성요소 생성 (최적화: DOM 조작을 한 번에 수행)
@@ -642,12 +735,24 @@
         return numbers.sort((a, b) => a - b);
     }
     
-    // 추첨 애니메이션 강화 (최적화: 필수적인 변경만 수행)
+    // 추첨 애니메이션 강화 (사운드 추가)
     function enhancedAnimation() {
-        // 추첨기 흔들기 (더 강하게)
+        // 추첨기 흔들기
         const machineBody = document.querySelector('.machine-body');
-        if (machineBody) machineBody.classList.add('shake-hard'); // 더 강한 흔들림 사용
+        if (machineBody) machineBody.classList.add('shake-hard');
         
+        // 사용자 상호작용 후에 소리 재생 시도
+        if (soundEnabled) {
+            // 시작 소리 재생
+            playSound(startSound);
+            
+            // 약간 지연 후 기계 소리 재생 (두 소리가 겹치지 않도록)
+            setTimeout(() => {
+                playSound(machineSound);
+            }, 1000);
+        }
+        
+        // 나머지 애니메이션 코드 유지...
         // 에어 효과 강화
         const airEffect = document.getElementById('airEffect');
         if (airEffect) {
@@ -678,6 +783,7 @@
         
         // 3초 후 원래 상태로 복귀
         setTimeout(() => {
+            // 애니메이션 관련 코드는 유지...
             if (machineBody) machineBody.classList.remove('shake-hard');
             if (airEffect) {
                 airEffect.classList.remove('air-strong');
@@ -707,7 +813,7 @@
         }, 3000);
     }
     
-    // 공 선택하고 떨어뜨리기 (최적화: 필요한 DOM 조작만 수행)
+    // 공 선택하고 떨어뜨리기 (사운드 추가)
     function selectBall(number) {
         return new Promise((resolve) => {
             // 해당 번호의 공 찾기
@@ -721,6 +827,9 @@
             selectedBall.selected = true;
             selectedBall.element.classList.add('selected-ball');
             selectedBall.element.classList.remove('ball-rotate');
+            selectedBall.element.classList.remove('ball-fast');
+            selectedBall.element.classList.remove('ball-reverse');
+            selectedBall.element.classList.remove('ball-bounce');
             
             // 출구로 유도하는 대신 CSS로 즉시 중앙으로 이동
             selectedBall.element.style.transition = 'left 0.5s, top 0.5s, transform 0.5s';
@@ -742,6 +851,9 @@
                 
                 // 튜브로 떨어지는 애니메이션
                 setTimeout(() => {
+                    // 볼 떨어지는 소리 재생
+                    playSound(ballDropSound);
+                    
                     // 튜브 패스로 공이 떨어지는 효과
                     const ballClone = document.createElement('div');
                     ballClone.className = 'ball selected-ball';
@@ -769,7 +881,7 @@
         });
     }
     
-    // 결과 표시
+    // 결과 표시 (사운드 추가)
     function showResult(number) {
         const {resultContainer} = machineElements;
         if (!resultContainer) return;
@@ -787,7 +899,7 @@
         }, 100);
     }
     
-    // 로또 추첨 실행 (최적화: 필요한 연산만 수행)
+    // 로또 추첨 실행 (사운드 추가)
     async function drawLottery() {
         if (drawingInProgress) return;
         
@@ -821,6 +933,12 @@
             
             // 공이 완전히 빠져나간 후 결과 표시
             showResult(number);
+            
+            // 마지막 번호일 경우 추첨 완료 사운드 재생
+            if (i === lottoNumbers.length - 1) {
+                machineSound.pause(); // 추첨기 소리 중지
+                playSound(resultSound); // 당첨 소리 재생
+            }
         }
         
         // 추첨 완료 후 버튼 활성화
@@ -829,19 +947,273 @@
         drawingInProgress = false;
     }
     
+    // 사운드 토글 기능 개선
+    function toggleSound() {
+        soundEnabled = !soundEnabled;
+        
+        if (soundEnabled) {
+            machineElements.soundIcon.classList.remove('muted');
+            // 현재 추첨 중이라면 소리 재생
+            if (drawingInProgress) {
+                // 다시 재생 시도
+                setTimeout(() => {
+                    machineSound.play().catch(err => console.log('사용자 상호작용 후 재생 시도:', err));
+                }, 100);
+            }
+        } else {
+            machineElements.soundIcon.classList.add('muted');
+            // 모든 소리 중지
+            pauseAllSounds();
+        }
+    }
+    
+    // 모든 소리 중지 함수 추가
+    function pauseAllSounds() {
+        const sounds = [machineSound, ballDropSound, resultSound, startSound];
+        sounds.forEach(sound => {
+            if (sound && !sound.paused) {
+                sound.pause();
+            }
+        });
+    }
+    
+    // 사운드 재생 함수 개선
+    function playSound(audioElement) {
+        if (!soundEnabled || !audioElement) return;
+        
+        // 오디오 요소 체크
+        if (audioElement.readyState === 0) {
+            console.log('오디오가 로드되지 않았습니다. 로드 중...');
+            audioElement.load();
+        }
+        
+        // 안전하게 시간 초기화
+        try {
+            audioElement.currentTime = 0;
+        } catch (e) {
+            console.log('오디오 시간 초기화 오류:', e);
+        }
+        
+        // 오디오 재생 시도
+        try {
+            const playPromise = audioElement.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    console.log('오디오 재생 성공');
+                }).catch(error => {
+                    console.log('오디오 재생 실패:', error);
+                    
+                    // 자동 재생 정책 우회 시도
+                    if (error.name === 'NotAllowedError') {
+                        console.log('자동 재생 정책 우회 시도...');
+                        
+                        // 보조 오디오 생성 (내장 오실레이터 사용)
+                        createFallbackAudio(audioElement.id);
+                    }
+                });
+            }
+        } catch (e) {
+            console.log('오디오 재생 중 오류 발생:', e);
+            createFallbackAudio(audioElement.id);
+        }
+    }
+    
+    // 웹 오디오 API를 사용한 대체 소리 생성 (브라우저 내장 사운드)
+    function createFallbackAudio(type) {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            // 소리 유형에 따라 다른 효과 적용
+            switch(type) {
+                case 'machineSound':
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.value = 100;
+                    gainNode.gain.value = 0.1;
+                    break;
+                case 'ballDropSound':
+                    oscillator.type = 'sine';
+                    oscillator.frequency.value = 440;
+                    gainNode.gain.value = 0.2;
+                    setTimeout(() => gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5), 100);
+                    break;
+                case 'resultSound':
+                    oscillator.type = 'square';
+                    oscillator.frequency.value = 880;
+                    gainNode.gain.value = 0.2;
+                    oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.5);
+                    setTimeout(() => gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1), 500);
+                    break;
+                case 'startSound':
+                    oscillator.type = 'triangle';
+                    oscillator.frequency.value = 220;
+                    gainNode.gain.value = 0.3;
+                    setTimeout(() => {
+                        oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 1);
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
+                    }, 100);
+                    break;
+            }
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.start();
+            setTimeout(() => {
+                oscillator.stop();
+            }, type === 'machineSound' ? 10000 : 2000);
+            
+            console.log('대체 오디오 재생 중');
+        } catch (e) {
+            console.log('대체 오디오 생성 실패:', e);
+        }
+    }
+    
+    // 오디오 세팅 강화
+    function setupAudio() {
+        // 오디오 요소 캐싱
+        machineSound = document.getElementById('machineSound');
+        ballDropSound = document.getElementById('ballDropSound');
+        resultSound = document.getElementById('resultSound');
+        startSound = document.getElementById('startSound');
+        
+        // 오디오 요소 존재 확인
+        if (!machineSound || !ballDropSound || !resultSound || !startSound) {
+            console.error('오디오 요소가 없습니다. 오디오 기능이 제한됩니다.');
+            return;
+        }
+        
+        // 오디오 이벤트 리스너 추가
+        const sounds = [machineSound, ballDropSound, resultSound, startSound];
+        
+        sounds.forEach(sound => {
+            // 로딩 중 이벤트
+            sound.addEventListener('loadstart', () => {
+                console.log(`${sound.id} 로딩 시작`);
+            });
+            
+            // 로딩 완료 이벤트
+            sound.addEventListener('canplaythrough', () => {
+                console.log(`${sound.id} 로딩 완료, 재생 가능`);
+                sound.dataset.loaded = 'true';
+            });
+            
+            // 오류 이벤트
+            sound.addEventListener('error', (e) => {
+                console.error(`${sound.id} 로드 오류:`, e);
+                sound.dataset.error = 'true';
+            });
+            
+            // 볼륨 조정
+            sound.volume = 0.3;
+            
+            // 강제 로드
+            sound.load();
+        });
+        
+        // 개별 볼륨 조절
+        if (ballDropSound) ballDropSound.volume = 0.6;
+        if (resultSound) resultSound.volume = 0.6;
+    }
+    
+    // 오디오 사용 가능 여부 확인 함수 추가
+    function checkAudioAvailability() {
+        return new Promise((resolve) => {
+            // AudioContext 지원 확인
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) {
+                console.warn('Web Audio API가 지원되지 않습니다. 대체 사운드를 사용합니다.');
+                resolve(false);
+                return;
+            }
+            
+            // 오디오 컨텍스트 생성 테스트
+            try {
+                const testContext = new AudioContext();
+                testContext.close().then(() => {
+                    console.log('오디오 시스템 사용 가능');
+                    resolve(true);
+                }).catch(() => {
+                    console.warn('오디오 시스템 닫기 실패');
+                    resolve(false);
+                });
+            } catch (e) {
+                console.warn('오디오 시스템 초기화 실패:', e);
+                resolve(false);
+            }
+        });
+    }
+    
+    // DOM 요소 참조 캐싱
+    function cacheElements() {
+        machineElements = {
+            lotteryMachine: document.getElementById('lotteryMachine'),
+            resultContainer: document.getElementById('resultContainer'),
+            startBtn: document.getElementById('startBtn'),
+            resetBtn: document.getElementById('resetBtn'),
+            soundControl: document.getElementById('soundControl'),
+            soundIcon: document.getElementById('soundIcon')
+        };
+        
+        // 오디오 요소 캐싱
+        machineSound = document.getElementById('machineSound');
+        ballDropSound = document.getElementById('ballDropSound');
+        resultSound = document.getElementById('resultSound');
+        startSound = document.getElementById('startSound');
+        
+        // 볼륨 조정
+        machineSound.volume = 0.3;
+        ballDropSound.volume = 0.5;
+        resultSound.volume = 0.5;
+        startSound.volume = 0.3;
+    }
+    
     // 이벤트 리스너 등록
-    document.addEventListener('DOMContentLoaded', function() {
+    function setupEventListeners() {
+        const {startBtn, resetBtn, soundControl} = machineElements;
+        
+        if (startBtn) startBtn.addEventListener('click', drawLottery);
+        if (resetBtn) resetBtn.addEventListener('click', initMachine);
+        if (soundControl) soundControl.addEventListener('click', toggleSound);
+    }
+    
+    // 이벤트 리스너 등록
+    document.addEventListener('DOMContentLoaded', async function() {
+        // 오디오 시스템 확인
+        const audioAvailable = await checkAudioAvailability();
+        
         // DOM 요소 캐싱
         cacheElements();
         
-        const {startBtn, resetBtn} = machineElements;
+        // 오디오 설정
+        setupAudio();
         
-        // 이벤트 리스너
-        if (startBtn) startBtn.addEventListener('click', drawLottery);
-        if (resetBtn) resetBtn.addEventListener('click', initMachine);
+        // 이벤트 리스너 설정
+        setupEventListeners();
         
         // 초기화
         initMachine();
+        
+        // 오디오 시스템 상태 알림
+        if (!audioAvailable) {
+            console.log('오디오 시스템이 제한되어 있습니다. 내장 사운드 생성기를 사용합니다.');
+        }
+        
+        // 사용자에게 상호작용 필요성 알림
+        console.log('소리를 재생하려면 화면을 클릭하세요.');
+        document.body.addEventListener('click', function bodyClick() {
+            // 무음 오디오 재생으로 오디오 활성화
+            const silentAudio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
+            silentAudio.play().then(() => {
+                console.log('오디오 활성화 성공');
+                document.body.removeEventListener('click', bodyClick);
+            }).catch(err => {
+                console.log('오디오 활성화 실패:', err);
+            });
+        });
     });
     </script>
 </body>
