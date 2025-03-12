@@ -1,0 +1,251 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #121212;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    min-height: 100vh;
+    margin: 0;
+}
+
+h1 {
+    text-align: center;
+    color: #ffcc00;
+    margin-bottom: 30px;
+}
+
+.lottery-machine {
+    width: 400px;
+    height: 400px;
+    background-color: transparent;
+    position: relative;
+    margin-bottom: 40px;
+    perspective: 1000px;
+}
+
+.machine-body {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    position: absolute;
+    border: 10px solid #3a3a3a;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(255, 204, 0, 0.2),
+                inset 0 0 20px rgba(255, 255, 255, 0.05);
+    transform-style: preserve-3d;
+    z-index: 1;
+}
+
+.machine-glass {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    position: absolute;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.1) 100%);
+    z-index: 10;
+    pointer-events: none;
+}
+
+.tube {
+    position: absolute;
+    width: 80px;
+    height: 40px;
+    background-color: #333;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid #3a3a3a;
+    border-bottom: none;
+    border-top-left-radius: 40px;
+    border-top-right-radius: 40px;
+    box-shadow: inset 0 5px 15px rgba(0, 0, 0, 0.5);
+    z-index: 5;
+}
+
+.ball-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    z-index: 5;
+}
+
+.ball {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+    color: white;
+    box-shadow: inset -3px -3px 8px rgba(0, 0, 0, 0.4),
+                0 0 10px rgba(255, 255, 255, 0.2);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    transition: opacity 0.3s, transform 0.5s;
+}
+
+.selected-ball {
+    transform: scale(1.5) !important;
+    z-index: 100;
+    box-shadow: 0 0 20px gold, inset -3px -3px 10px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes shooting-ball {
+    0% { 
+        transform: translate(0, 0) scale(1); 
+        z-index: 200;
+    }
+    50% { 
+        transform: translate(0, 200px) scale(1.2); 
+        z-index: 200;
+    }
+    100% { 
+        transform: translate(0, 400px) scale(1); 
+        opacity: 0;
+        z-index: 200;
+    }
+}
+
+.result-container {
+    display: flex;
+    gap: 15px;
+    margin-top: 50px;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 20px 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    min-height: 80px;
+    align-items: center;
+}
+
+.result-ball {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 24px;
+    color: white;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3),
+                inset -3px -3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(0);
+    transition: transform 0.5s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+}
+
+.controls {
+    margin-top: 30px;
+    display: flex;
+    gap: 20px;
+}
+
+button {
+    padding: 12px 25px;
+    font-size: 16px;
+    background-color: #ffcc00;
+    color: #121212;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background-color: #ffd700;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+button:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+button:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.air-effect {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    animation: airEffect 8s infinite linear;
+    background: radial-gradient(circle, transparent 30%, rgba(255, 255, 255, 0.05) 70%);
+    pointer-events: none;
+}
+
+@keyframes airEffect {
+    0% { transform: scale(0.5); opacity: 0.1; }
+    50% { transform: scale(0.8); opacity: 0.15; }
+    100% { transform: scale(0.5); opacity: 0.1; }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+
+@keyframes spin {
+    0% { transform: rotateY(0deg) rotateX(0deg); }
+    100% { transform: rotateY(360deg) rotateX(360deg); }
+}
+
+@keyframes float {
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(15px, -15px); }
+    50% { transform: translate(-10px, 10px); }
+    75% { transform: translate(-15px, -5px); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+    20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+
+.fan {
+    position: absolute;
+    bottom: 50px;
+    width: 100px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(to right, #222, #444, #222);
+    animation: fanSpin 0.5s infinite linear;
+    transform-origin: center;
+    z-index: 2;
+    opacity: 0.7;
+    left: calc(50% - 50px);
+}
+
+@keyframes fanSpin {
+    0% { transform: scaleX(1); }
+    50% { transform: scaleX(0.5); }
+    100% { transform: scaleX(1); }
+}
+
+.machine-base {
+    position: absolute;
+    width: 150px;
+    height: 30px;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(to bottom, #3a3a3a, #222);
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
