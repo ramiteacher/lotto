@@ -22,20 +22,18 @@ h1 {
     background-color: transparent;
     position: relative;
     margin-bottom: 40px;
-    perspective: 1000px;
 }
 
 .machine-body {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(40, 40, 40, 0.8);
     position: absolute;
     border: 10px solid #3a3a3a;
     overflow: hidden;
     box-shadow: 0 0 30px rgba(255, 204, 0, 0.2),
                 inset 0 0 20px rgba(255, 255, 255, 0.05);
-    transform-style: preserve-3d;
     z-index: 1;
 }
 
@@ -45,11 +43,27 @@ h1 {
     border-radius: 50%;
     position: absolute;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.1) 100%);
-    z-index: 10;
+    z-index: 20;
     pointer-events: none;
 }
 
 .tube {
+    position: absolute;
+    width: 80px;
+    height: 120px;
+    background: linear-gradient(to bottom, #333, #222);
+    bottom: -120px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid #3a3a3a;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    z-index: 3;
+    overflow: hidden;
+    box-shadow: inset 0 5px 15px rgba(0, 0, 0, 0.7);
+}
+
+.tube-top {
     position: absolute;
     width: 80px;
     height: 40px;
@@ -62,14 +76,13 @@ h1 {
     border-top-left-radius: 40px;
     border-top-right-radius: 40px;
     box-shadow: inset 0 5px 15px rgba(0, 0, 0, 0.5);
-    z-index: 5;
+    z-index: 2;
 }
 
 .ball-container {
     width: 100%;
     height: 100%;
     position: relative;
-    transform-style: preserve-3d;
     z-index: 5;
 }
 
@@ -87,37 +100,19 @@ h1 {
     box-shadow: inset -3px -3px 8px rgba(0, 0, 0, 0.4),
                 0 0 10px rgba(255, 255, 255, 0.2);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    transform-style: preserve-3d;
-    backface-visibility: hidden;
-    transition: opacity 0.3s, transform 0.5s;
+    will-change: transform, left, top;
+    z-index: 10;
 }
 
 .selected-ball {
-    transform: scale(1.5) !important;
     z-index: 100;
     box-shadow: 0 0 20px gold, inset -3px -3px 10px rgba(0, 0, 0, 0.5);
-}
-
-@keyframes shooting-ball {
-    0% { 
-        transform: translate(0, 0) scale(1); 
-        z-index: 200;
-    }
-    50% { 
-        transform: translate(0, 200px) scale(1.2); 
-        z-index: 200;
-    }
-    100% { 
-        transform: translate(0, 400px) scale(1); 
-        opacity: 0;
-        z-index: 200;
-    }
 }
 
 .result-container {
     display: flex;
     gap: 15px;
-    margin-top: 50px;
+    margin-top: 100px;
     background-color: rgba(255, 255, 255, 0.1);
     padding: 20px 30px;
     border-radius: 15px;
@@ -177,45 +172,7 @@ button:disabled {
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
-}
-
-.air-effect {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    animation: airEffect 8s infinite linear;
-    background: radial-gradient(circle, transparent 30%, rgba(255, 255, 255, 0.05) 70%);
-    pointer-events: none;
-}
-
-@keyframes airEffect {
-    0% { transform: scale(0.5); opacity: 0.1; }
-    50% { transform: scale(0.8); opacity: 0.15; }
-    100% { transform: scale(0.5); opacity: 0.1; }
-}
-
-@keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-15px); }
-}
-
-@keyframes spin {
-    0% { transform: rotateY(0deg) rotateX(0deg); }
-    100% { transform: rotateY(360deg) rotateX(360deg); }
-}
-
-@keyframes float {
-    0%, 100% { transform: translate(0, 0); }
-    25% { transform: translate(15px, -15px); }
-    50% { transform: translate(-10px, 10px); }
-    75% { transform: translate(-15px, -5px); }
-}
-
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
-    20%, 40%, 60%, 80% { transform: translateX(10px); }
+    opacity: 0.7;
 }
 
 .fan {
@@ -242,10 +199,182 @@ button:disabled {
     position: absolute;
     width: 150px;
     height: 30px;
-    bottom: -30px;
+    bottom: -150px;
     left: 50%;
     transform: translateX(-50%);
     background: linear-gradient(to bottom, #3a3a3a, #222);
     border-radius: 10px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.air-effect {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle, transparent 30%, rgba(255, 255, 255, 0.05) 70%);
+    pointer-events: none;
+    z-index: 3;
+}
+
+.air-strong {
+    animation: airStrong 1s infinite linear;
+}
+
+@keyframes airStrong {
+    0% { transform: scale(0.8); opacity: 0.2; }
+    50% { transform: scale(1.1); opacity: 0.3; }
+    100% { transform: scale(0.8); opacity: 0.2; }
+}
+
+.tube-light {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), transparent);
+    animation: tubeLight 2s infinite;
+}
+
+@keyframes tubeLight {
+    0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.3; }
+}
+
+.tube-path {
+    position: absolute;
+    width: 60px;
+    height: 200px;
+    left: 50%;
+    bottom: -120px;
+    transform: translateX(-50%);
+    z-index: 4;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+@keyframes fallDown {
+    0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+    30% { transform: translateY(50px) rotate(180deg); opacity: 1; }
+    60% { transform: translateY(150px) rotate(360deg); opacity: 1; }
+    100% { transform: translateY(250px) rotate(720deg); opacity: 0; }
+}
+
+.shake {
+    animation: shake 0.5s infinite;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    25% { transform: translateX(-5px) rotate(-2deg); }
+    50% { transform: translateX(0) rotate(0deg); }
+    75% { transform: translateX(5px) rotate(2deg); }
+}
+
+.exit-hole {
+    position: absolute;
+    width: 50px;
+    height: 30px;
+    background-color: rgba(30, 30, 30, 0.8);
+    border: 3px solid #333;
+    border-radius: 50%;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 4;
+}
+
+.ball-rotate {
+    animation: ballRotate 1s infinite linear;
+}
+
+@keyframes ballRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 볼 회전 애니메이션 개선 - 회전 시간 단축 */
+.ball-rotate {
+    animation: ballRotate 1s infinite linear; /* 3초→1초로 단축 */
+}
+
+/* 볼 빠르게 회전 효과 */
+.ball-fast {
+    animation: ballRotate 0.5s infinite linear; /* 더 빠른 회전 */
+}
+
+/* 회전 방향 반대 */
+.ball-reverse {
+    animation: ballRotateReverse 0.8s infinite linear;
+}
+
+/* 회전하며 튕기는 볼 */
+.ball-bounce {
+    animation: ballBounce 0.8s infinite alternate ease-in-out;
+}
+
+/* 추가 애니메이션 정의 */
+@keyframes ballRotate {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.05); } /* 회전하며 살짝 커짐 */
+    100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes ballRotateReverse {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(-360deg); }
+}
+
+@keyframes ballBounce {
+    0% { transform: translateY(0) rotate(0deg); }
+    100% { transform: translateY(-10px) rotate(30deg); }
+}
+
+/* 추첨 중 흔들림 효과 강화 */
+.shake-hard {
+    animation: shakeHard 0.3s infinite;
+}
+
+@keyframes shakeHard {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    25% { transform: translateX(-8px) rotate(-3deg); }
+    50% { transform: translateX(0) rotate(0deg); }
+    75% { transform: translateX(8px) rotate(3deg); }
+}
+
+/* 공이 빠르게 튀어오르는 효과 */
+.jump-ball {
+    animation: jumpBall 0.3s ease-out;
+}
+
+@keyframes jumpBall {
+    0% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-40px) scale(1.2); }
+    100% { transform: translateY(0) scale(1); }
+}
+
+/* 사운드 컨트롤 버튼 스타일 추가 */
+.sound-control {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 100;
+}
+
+.sound-icon {
+    width: 24px;
+    height: 24px;
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0zIDloNGw1LTVzMSAxIDEgNHYxMGMwIDMtMSA0LTEgNEw3IDE1SDN6Ii8+PHBhdGggZD0iTTE2LjUgMTJjMC0xLjgtMS0zLjMtMi41LTQiLz48cGF0aCBkPSJNMTkuNSAxMmMwLTMuMS0xLjctNS43LTQuMi03LjEiIHN0cm9rZT0id2hpdGUiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNMjEuNSAxMmMwLTQuMy0yLjQtOC4xLTYtMTAiIHN0cm9rZT0id2hpdGUiIGZpbGw9Im5vbmUiLz48L3N2Zz4=');
+    background-size: contain;
+}
+
+.sound-icon.muted {
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0zIDloNGw1LTVzMSAxIDEgNHYxMGMwIDMtMSA0LTEgNEw3IDE1SDN6Ii8+PHBhdGggZD0iTTE2IDE2bDYtNm0wIDZsLTYtNiIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+PC9zdmc+');
 }
