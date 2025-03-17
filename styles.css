@@ -1,50 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
-
-:root {
-    --clover-green: #2E8B57;
-    --clover-dark: #1e5631;
-    --lucky-gold: #FFD700;
-    --lucky-light: #FFFACD;
-}
-
 body {
-    font-family: 'Noto Sans KR', sans-serif;
-    background-color: #f0f8f0;
-    color: #333;
+    font-family: 'Arial', sans-serif;
+    background-color: #121212;
+    color: white;
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 20px;
     min-height: 100vh;
     margin: 0;
-    background-image: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), 
-                      url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" opacity="0.1"><path fill="%232E8B57" d="M30,30 C35,20 45,20 50,30 C55,20 65,20 70,30 C80,35 80,45 70,50 C80,55 80,65 70,70 C65,80 55,80 50,70 C45,80 35,80 30,70 C20,65 20,55 30,50 C20,45 20,35 30,30 Z"/></svg>');
-    background-size: 200px;
 }
 
 h1 {
     text-align: center;
-    color: var(--clover-dark);
+    color: #ffcc00;
     margin-bottom: 30px;
-    font-size: 2.5rem;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-    position: relative;
-    display: inline-block;
-}
-
-h1::before, h1::after {
-    content: "🍀";
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-h1::before {
-    left: -40px;
-}
-
-h1::after {
-    right: -40px;
 }
 
 .lottery-machine {
@@ -53,71 +22,60 @@ h1::after {
     background-color: transparent;
     position: relative;
     margin-bottom: 40px;
-    border-radius: 50%;
-    box-shadow: 0 10px 30px rgba(46, 139, 87, 0.3);
 }
 
-/* 머신 본체 색상 업데이트 */
 .machine-body {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: rgba(30, 86, 49, 0.85); /* 짙은 초록색으로 변경 */
+    background: rgba(40, 40, 40, 0.8);
     position: absolute;
-    border: 10px solid var(--lucky-gold); /* 금색 테두리로 변경 */
+    border: 10px solid #3a3a3a;
     overflow: hidden;
-    box-shadow: 0 0 30px rgba(255, 215, 0, 0.4),
-                inset 0 0 30px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 30px rgba(255, 204, 0, 0.2),
+                inset 0 0 20px rgba(255, 255, 255, 0.05);
     z-index: 1;
 }
 
-/* 유리 효과 개선 */
 .machine-glass {
     width: 100%;
     height: 100%;
     border-radius: 50%;
     position: absolute;
-    background: radial-gradient(
-        circle at 30% 30%,
-        rgba(255, 255, 255, 0.3) 0%,
-        rgba(255, 255, 255, 0.1) 40%,
-        rgba(30, 86, 49, 0.05) 100%
-    );
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.1) 100%);
     z-index: 20;
     pointer-events: none;
 }
 
-/* 튜브 색상 업데이트 */
 .tube {
     position: absolute;
     width: 80px;
     height: 120px;
-    background: linear-gradient(to bottom, var(--lucky-gold), #b8860b); /* 금색 계열로 변경 */
+    background: linear-gradient(to bottom, #333, #222);
     bottom: -120px;
     left: 50%;
     transform: translateX(-50%);
-    border: 5px solid #b8860b; /* 다크 골드 테두리 */
+    border: 5px solid #3a3a3a;
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;
     z-index: 3;
     overflow: hidden;
-    box-shadow: inset 0 5px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 5px 15px rgba(0, 0, 0, 0.7);
 }
 
-/* 튜브 상단 색상 업데이트 */
 .tube-top {
     position: absolute;
     width: 80px;
     height: 40px;
-    background-color: var(--lucky-gold); /* 금색으로 변경 */
+    background-color: #333;
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    border: 5px solid #b8860b; /* 다크 골드 테두리 */
+    border: 5px solid #3a3a3a;
     border-bottom: none;
     border-top-left-radius: 40px;
     border-top-right-radius: 40px;
-    box-shadow: inset 0 5px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 5px 15px rgba(0, 0, 0, 0.5);
     z-index: 2;
 }
 
@@ -148,37 +106,49 @@ h1::after {
 
 .selected-ball {
     z-index: 100;
-    box-shadow: 0 0 20px var(--lucky-gold), inset -3px -3px 10px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 20px gold, inset -3px -3px 10px rgba(0, 0, 0, 0.5);
 }
 
 .result-container {
     display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 15px;
     margin-top: 100px;
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.1);
     padding: 20px 30px;
     border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(46, 139, 87, 0.3);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     min-height: 80px;
+    min-width: 600px;
     align-items: center;
+}
+
+.result-set {
+    display: flex;
+    gap: 12px;
+    margin: 10px 0;
     position: relative;
-    border: 2px solid var(--clover-green);
+    padding: 5px 15px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    align-items: center;
+    justify-content: center;
 }
 
-.result-container::before {
-    content: "🍀";
+.set-number {
     position: absolute;
-    top: -15px;
-    left: -15px;
-    font-size: 30px;
-}
-
-.result-container::after {
-    content: "🍀";
-    position: absolute;
-    bottom: -15px;
-    right: -15px;
-    font-size: 30px;
+    left: -30px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: #ffcc00;
+    color: #121212;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
 }
 
 .result-ball {
@@ -206,28 +176,18 @@ h1::after {
 button {
     padding: 12px 25px;
     font-size: 16px;
-    background-color: var(--clover-green);
-    color: white;
+    background-color: #ffcc00;
+    color: #121212;
     border: none;
     border-radius: 30px;
     cursor: pointer;
     font-weight: bold;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
-    position: relative;
-}
-
-#startBtn::before {
-    content: "🍀";
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
 }
 
 button:hover {
-    background-color: var(--lucky-gold);
-    color: var(--clover-dark);
+    background-color: #ffd700;
     transform: translateY(-3px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
@@ -245,7 +205,19 @@ button:disabled {
     opacity: 0.7;
 }
 
-
+.fan {
+    position: absolute;
+    bottom: 50px;
+    width: 100px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(to right, #222, #444, #222);
+    animation: fanSpin 0.5s infinite linear;
+    transform-origin: center;
+    z-index: 2;
+    opacity: 0.7;
+    left: calc(50% - 50px);
+}
 
 @keyframes fanSpin {
     0% { transform: scaleX(1); }
@@ -253,7 +225,6 @@ button:disabled {
     100% { transform: scaleX(1); }
 }
 
-/* 머신 베이스 색상 업데이트 */
 .machine-base {
     position: absolute;
     width: 150px;
@@ -261,9 +232,9 @@ button:disabled {
     bottom: -150px;
     left: 50%;
     transform: translateX(-50%);
-    background: linear-gradient(to bottom, var(--lucky-gold), #b8860b); /* 금색 계열로 변경 */
+    background: linear-gradient(to bottom, #3a3a3a, #222);
     border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 }
 
 .air-effect {
@@ -286,12 +257,11 @@ button:disabled {
     100% { transform: scale(0.8); opacity: 0.2; }
 }
 
-/* 튜브 빛 효과 강화 */
 .tube-light {
     position: absolute;
     width: 100%;
     height: 100%;
-    background: linear-gradient(to bottom, rgba(255, 215, 0, 0.4), transparent);
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), transparent);
     animation: tubeLight 2s infinite;
 }
 
@@ -330,13 +300,12 @@ button:disabled {
     75% { transform: translateX(5px) rotate(2deg); }
 }
 
-/* 출구 구멍 색상 업데이트 */
 .exit-hole {
     position: absolute;
     width: 50px;
     height: 30px;
-    background-color: rgba(184, 134, 11, 0.8); /* 다크 골드로 변경 */
-    border: 3px solid var(--lucky-gold); /* 금색 테두리 */
+    background-color: rgba(30, 30, 30, 0.8);
+    border: 3px solid #333;
     border-radius: 50%;
     bottom: 0;
     left: 50%;
@@ -354,7 +323,6 @@ button:disabled {
     100% { transform: rotate(360deg) scale(1); }
 }
 
-/* 볼 회전 애니메이션 개선 - 회전 시간 단축 */
 .ball-fast {
     animation: ballRotate 0.5s infinite linear;
 }
@@ -402,7 +370,7 @@ button:disabled {
     position: absolute;
     top: 10px;
     right: 10px;
-    background-color: rgba(46, 139, 87, 0.7);
+    background-color: rgba(0, 0, 0, 0.5);
     border-radius: 50%;
     width: 40px;
     height: 40px;
@@ -411,7 +379,6 @@ button:disabled {
     align-items: center;
     cursor: pointer;
     z-index: 100;
-    border: 2px solid rgba(255, 215, 0, 0.5);
 }
 
 .sound-icon {
@@ -425,121 +392,68 @@ button:disabled {
     background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0zIDloNGw1LTVzMSAxIDEgNHYxMGMwIDMtMSA0LTEgNEw3IDE1SDN6Ii8+PHBhdGggZD0iTTE2IDE2bDYtNm0wIDZsLTYtNiIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+PC9zdmc+');
 }
 
-/* 반응형 디자인을 위한 미디어 쿼리 추가 */
-@media screen and (max-width: 768px) {
-    body {
-        padding: 10px;
-    }
-    
-    h1 {
-        font-size: 1.8rem;
-    }
-    
-    h1::before, h1::after {
-        display: none; /* 모바일에서는 제목 옆 아이콘 제거 */
-    }
-    
-    .subtitle {
-        font-size: 0.9rem;
-        margin-bottom: 20px;
-    }
-    
-    .lottery-machine {
-        width: 300px;
-        height: 300px;
-        margin-bottom: 30px;
-    }
-    
-    .ball {
-        width: 30px;
-        height: 30px;
-        font-size: 14px;
-    }
-    
-    .tube {
-        width: 60px;
-        height: 90px;
-        bottom: -90px;
-    }
-    
-    .tube-top {
-        width: 60px;
-        height: 30px;
-    }
-    
-    .result-container {
-        padding: 15px;
-        margin-top: 70px;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    
-    .result-ball {
-        width: 45px;
-        height: 45px;
-        font-size: 20px;
-        margin: 5px;
-    }
-    
-    .controls {
-        flex-direction: column;
-        gap: 15px;
-        align-items: center;
-        margin-top: 20px;
-    }
-    
-    button {
-        width: 80%;
-        padding: 15px;
-        font-size: 16px;
-    }
+/* 번호 선택 라디오 버튼 스타일 */
+.number-selector {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 20px;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 12px 25px;
+    border-radius: 30px;
 }
 
-/* 더 작은 모바일 화면을 위한 추가 조정 */
-@media screen and (max-width: 480px) {
-    .lottery-machine {
-        width: 250px;
-        height: 250px;
-    }
-    
-    .ball {
-        width: 25px;
-        height: 25px;
-        font-size: 12px;
-    }
-    
-    h1 {
-        font-size: 1.5rem;
-    }
-    
-    .result-container {
-        padding: 10px;
-    }
-    
-    .result-ball {
-        width: 40px;
-        height: 40px;
-        font-size: 18px;
-    }
-    
-    button {
-        width: 100%;
-    }
+.number-selector label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+    color: #ffcc00;
+    cursor: pointer;
 }
 
-/* 터치 디바이스를 위한 최적화 */
-@media (hover: none) {
-    button {
-        padding: 15px 20px;
-    }
-    
-    .sound-control {
-        width: 50px;
-        height: 50px;
-    }
-    
-    .sound-icon {
-        width: 30px;
-        height: 30px;
-    }
+.number-selector input {
+    cursor: pointer;
+}
+
+/* 속도 토글 버튼 스타일 */
+.speed-toggle {
+    background-color: #666;
+    position: relative;
+}
+
+.speed-toggle.active {
+    background-color: #ff6600;
+}
+
+.speed-toggle.active::after {
+    content: '4X';
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background-color: #ff0000;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+
+/* 8X 속도 버튼 스타일 추가 */
+.speed-toggle.ultra {
+    background-color: #ff0000;
+    color: white;
+}
+
+.speed-toggle.ultra::after {
+    content: '8X';
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background-color: #ff00ff;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 10px;
 }
