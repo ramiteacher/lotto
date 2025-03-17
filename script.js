@@ -95,9 +95,6 @@
          // 기계 구성요소 생성 (최적화: 단일 함수로 묶음)
          createMachineComponents(lotteryMachine);
  
-         // 볼 생성
-         createBalls();
- 
          // 애니메이션 시작
          isAnimating = true;
          drawingInProgress = false;
@@ -108,194 +105,285 @@
          setupEventListeners();
      }
  
-     // 기계 구성요소 생성 (최적화: DOM 조작을 한 번에 수행)
+     // 기계 구성요소 생성 함수 수정
      function createMachineComponents(lotteryMachine) {
          // DocumentFragment 사용으로 렌더링 최적화
          const fragment = document.createDocumentFragment();
- 
+     
          // 추첨기 본체 생성
          const machineBody = document.createElement('div');
          machineBody.className = 'machine-body';
-         fragment.appendChild(machineBody);
- 
-         // 볼 컨테이너 생성
+     
+         // 팬 추가
+         const fan = document.createElement('div');
+         fan.className = 'fan';
+         machineBody.appendChild(fan);
+     
+         // 볼 컨테이너를 machineBody 안에 생성
          const ballContainer = document.createElement('div');
          ballContainer.className = 'ball-container';
          ballContainer.id = 'ballContainer';
- 
+         
          // 공기 효과 추가
          const airEffect = document.createElement('div');
          airEffect.className = 'air-effect';
          airEffect.id = 'airEffect';
          ballContainer.appendChild(airEffect);
- 
-         fragment.appendChild(ballContainer);
- 
+         
+         // 볼 컨테이너를 machineBody 안에 추가
+         machineBody.appendChild(ballContainer);
+         
+         // 모든 공 생성 및 ballContainer에 추가
+         createBalls(ballContainer);
+         
+         // machineBody를 fragment에 추가
+         fragment.appendChild(machineBody);
+     
          // 출구 구멍 추가
          const exitHole = document.createElement('div');
          exitHole.className = 'exit-hole';
          fragment.appendChild(exitHole);
- 
+     
          // 튜브 상단 추가
          const tubeTop = document.createElement('div');
          tubeTop.className = 'tube-top';
          fragment.appendChild(tubeTop);
- 
+     
          // 튜브 패스 추가 (공이 떨어지는 경로)
          const tubePath = document.createElement('div');
          tubePath.className = 'tube-path';
          tubePath.id = 'tubePath';
          fragment.appendChild(tubePath);
- 
+     
          // 튜브 추가
          const tube = document.createElement('div');
          tube.className = 'tube';
- 
+     
          // 튜브 빛 효과 추가
          const tubeLight = document.createElement('div');
          tubeLight.className = 'tube-light';
          tube.appendChild(tubeLight);
- 
+     
          fragment.appendChild(tube);
- 
+     
          // 유리 효과 추가 (맨 위에 배치)
          const machineGlass = document.createElement('div');
          machineGlass.className = 'machine-glass';
          fragment.appendChild(machineGlass);
- 
-         // 팬 추가
-         const fan = document.createElement('div');
-         fan.className = 'fan';
-         fragment.appendChild(fan);
- 
+     
          // 받침대 추가
          const machineBase = document.createElement('div');
          machineBase.className = 'machine-base';
          fragment.appendChild(machineBase);
- 
+     
          // 한 번에 DOM에 추가
          lotteryMachine.appendChild(fragment);
      }
  
-     // 로또 공 생성 (최적화: DOM 조작 최소화)
-     function createBalls() {
-         const ballContainer = document.getElementById('ballContainer');
-         if (!ballContainer) return;
- 
-         // DocumentFragment 사용으로 렌더링 최적화
-         const fragment = document.createDocumentFragment();
- 
-         // 45개의 볼 생성
+     // 로또 공 생성 함수 수정
+     function createBalls(ballContainer) {
+         const containerWidth = 400; // 기본 컨테이너 너비
+         const containerHeight = 400; // 기본 컨테이너 높이
+         const centerX = containerWidth / 2;
+         const centerY = containerHeight / 2;
+
+         const maxRadius = Math.min(containerWidth, containerHeight) / 2 * 0.85;
+
          for (let i = 1; i <= 45; i++) {
-             const ball = document.createElement('div');
- 
-             // 다양한 회전 스타일 랜덤하게 적용
-             const animType = Math.floor(Math.random() * 4); // 0~3 랜덤값
-             let animClass = 'ball-rotate';
- 
-             switch(animType) {
-                 case 0: animClass = 'ball-rotate'; break;
-                 case 1: animClass = 'ball-fast'; break;     // 빠른 회전
-                 case 2: animClass = 'ball-reverse'; break;  // 반대 방향
-                 case 3: animClass = 'ball-bounce'; break;   // 튕기는 효과
-             }
- 
-             ball.className = `ball ${animClass}`;
-             ball.dataset.number = i;
-             ball.textContent = i;
-             ball.style.backgroundColor = getBallColor(i);
- 
-             // 초기 랜덤 위치와 움직임 설정 (계산 최소화)
-             const angleRad = Math.random() * Math.PI * 2;
-             const radius = 80 + Math.random() * 60;
- 
-             // 속도 2배 향상
-             const speed = (0.4 + Math.random() * 1.0); // 이전보다 2배 빠르게
-             const direction = Math.random() > 0.5 ? 1 : -1;
- 
-             const centerX = 200;
-             const centerY = 200;
- 
-             const x = centerX + Math.cos(angleRad) * radius - 20;
-             const y = centerY + Math.sin(angleRad) * radius - 20;
- 
-             // 초기 위치 설정
-             ball.style.left = `${x}px`;
-             ball.style.top = `${y}px`;
- 
-             // 볼 정보 저장
+             const ballElement = document.createElement('div');
+             ballElement.className = 'ball' + (Math.random() > 0.5 ? ' ball-rotate' : ' ball-reverse');
+             ballElement.style.backgroundColor = getBallColor(i);
+             ballElement.textContent = i;
+             
+             // 중심을 기준으로 초기 위치 설정
+             const angle = Math.random() * Math.PI * 2; // 0~2PI 사이의 랜덤 각도
+             // 작은 반경으로 시작하여 중앙에 더 집중되게 함
+             const radius = Math.min(containerWidth, containerHeight) * 0.15 * Math.random();
+             
+             // 컨테이너의 중심점
+             const centerX = containerWidth / 2;
+             const centerY = containerHeight / 2;
+             
+             // 볼의 초기 위치 계산 (중심에서 시작)
+             const ballSize = 40; // 볼 크기
+             const initialX = centerX + Math.cos(angle) * radius - ballSize / 2;
+             const initialY = centerY + Math.sin(angle) * radius - ballSize / 2;
+             
+             ballElement.style.left = initialX + 'px';
+             ballElement.style.top = initialY + 'px';
+             
+             ballContainer.appendChild(ballElement);
+             
+             // 볼 객체 정보 저장 - 매우 작은 바운스 효과
              balls.push({
-                 element: ball,
                  number: i,
-                 radius,
-                 angle: angleRad,
-                 speed: speed * direction,
-                 centerX,
-                 centerY,
-                 selected: false,
-                 speedY: 0,
-                 x, y,
-                 rotating: true,
-                 animType  // 애니메이션 타입 저장
+                 element: ballElement,
+                 angle: angle,
+                 speed: 0.4 + Math.random() * 0.2, // 속도 범위 축소 (0.4~0.6)
+                 bouncePhase: Math.random() * Math.PI * 2, // 랜덤한 위상차
+                 bounceHeight: 1 + Math.random() * 2, // 최소한의 바운스 (1~3px)
+                 bounceSpeed: 0.3 + Math.random() * 0.4 // 낮은 바운스 속도
              });
- 
-             fragment.appendChild(ball);
          }
- 
-         // 한 번에 DOM에 추가
-         ballContainer.appendChild(fragment);
- 
-         // 초기에 볼들이 튀어오르는 효과
-         balls.forEach((ball, idx) => {
-             setTimeout(() => {
-                 ball.element.classList.add('jump-ball');
-                 setTimeout(() => {
-                     ball.element.classList.remove('jump-ball');
-                 }, 300);
-             }, idx * 20); // 약간의 지연시간
-         });
      }
  
-     // 볼 애니메이션 최적화 (회전 및 움직임)
-     function animateBalls() {
-         if (!isAnimating) return;
- 
-         // 주사율에 맞춘 최적화 (60프레임 기준)
-         const now = Date.now();
-         if (!animateBalls.lastTime) animateBalls.lastTime = now;
- 
-         const delta = now - animateBalls.lastTime;
-         if (delta < 16) { // 약 60fps (1000ms/60 ≈ 16.7ms)
-             animationFrameId = requestAnimationFrame(animateBalls);
-             return;
-         }
- 
-         animateBalls.lastTime = now;
- 
-         const updateBalls = [];
- 
-         // 모든 공 위치 계산 (DOM 업데이트와 분리)
-         balls.forEach(ball => {
-             if (ball.selected || !ball.rotating) return;
- 
-             // 원 궤도로 회전 - 속도 3배 향상
-             ball.angle += ball.speed * 0.03; // 기존 0.01에서 0.03으로 증가
- 
-             // 새 위치 계산
-             ball.x = ball.centerX + Math.cos(ball.angle) * ball.radius - 20;
-             ball.y = ball.centerY + Math.sin(ball.angle) * ball.radius - 20;
- 
-             updateBalls.push(ball);
-         });
- 
-         // 모든 DOM 업데이트를 한번에 처리 (Layout Thrashing 방지)
-         updateBalls.forEach(ball => {
-             ball.element.style.left = `${ball.x}px`;
-             ball.element.style.top = `${ball.y}px`;
-         });
- 
-         animationFrameId = requestAnimationFrame(animateBalls);
-     }
+    // 볼 애니메이션 - 자연스러운 물리 기반 움직임 구현
+    function animateBalls() {
+        if (!isAnimating) return;
+    
+        const ballContainer = document.querySelector('.ball-container');
+        if (!ballContainer) return;
+        
+        const containerWidth = ballContainer.offsetWidth;
+        const containerHeight = ballContainer.offsetHeight;
+        
+        // 컨테이너의 중심점
+        const centerX = containerWidth / 2;
+        const centerY = containerHeight / 2;
+        
+        // 최대 반경 (원형 컨테이너 가정)
+        const maxRadius = Math.min(containerWidth, containerHeight) / 2 * 0.85;
+        
+        balls.forEach(ball => {
+            const element = ball.element;
+            if (!element || !element.parentNode) return;
+            
+            // 초기화되지 않은 속도 속성 초기화
+            if (ball.velocityX === undefined) {
+                ball.velocityX = (Math.random() - 0.5) * 1.2;
+                ball.velocityY = (Math.random() - 0.5) * 1.2;
+                ball.posX = parseFloat(element.style.left) + element.offsetWidth / 2;
+                ball.posY = parseFloat(element.style.top) + element.offsetHeight / 2;
+            }
+            
+            // 추첨 중일 때 더 활발한 움직임
+            const movementFactor = drawingInProgress ? 2.5 : 1;
+            
+            // 새 위치 계산
+            ball.posX += ball.velocityX * speedMode * movementFactor;
+            ball.posY += ball.velocityY * speedMode * movementFactor;
+            
+            // 원형 경계 충돌 감지
+            const distFromCenter = Math.sqrt(
+                Math.pow(ball.posX - centerX, 2) + 
+                Math.pow(ball.posY - centerY, 2)
+            );
+            
+            const ballRadius = element.offsetWidth / 2;
+            
+            if (distFromCenter + ballRadius > maxRadius) {
+                // 충돌 지점 계산
+                const angle = Math.atan2(ball.posY - centerY, ball.posX - centerX);
+                
+                // 충돌 처리 - 경계에서 약간 안쪽으로 이동
+                ball.posX = centerX + (maxRadius - ballRadius) * Math.cos(angle);
+                ball.posY = centerY + (maxRadius - ballRadius) * Math.sin(angle);
+                
+                // 속도 반사
+                const normalX = (ball.posX - centerX) / distFromCenter;
+                const normalY = (ball.posY - centerY) / distFromCenter;
+                
+                const dotProduct = ball.velocityX * normalX + ball.velocityY * normalY;
+                
+                ball.velocityX = ball.velocityX - 2 * dotProduct * normalX;
+                ball.velocityY = ball.velocityY - 2 * dotProduct * normalY;
+                
+                // 속도 감소 (에너지 손실)
+                ball.velocityX *= 0.8;
+                ball.velocityY *= 0.8;
+                
+                // 랜덤 요소 추가로 자연스러운 움직임
+                if (drawingInProgress) {
+                    ball.velocityX += (Math.random() - 0.5) * 0.5;
+                    ball.velocityY += (Math.random() - 0.5) * 0.5;
+                }
+            }
+            
+            // 볼끼리 충돌 감지 및 처리
+            balls.forEach(otherBall => {
+                if (ball === otherBall || !otherBall.posX || !otherBall.posY || ball.selected || otherBall.selected) return;
+                
+                const dx = ball.posX - otherBall.posX;
+                const dy = ball.posY - otherBall.posY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const minDistance = element.offsetWidth;
+                
+                if (distance < minDistance) {
+                    // 충돌 해결 - 볼 분리
+                    const overlap = minDistance - distance;
+                    const moveX = (dx / distance) * overlap * 0.5;
+                    const moveY = (dy / distance) * overlap * 0.5;
+                    
+                    ball.posX += moveX;
+                    ball.posY += moveY;
+                    otherBall.posX -= moveX;
+                    otherBall.posY -= moveY;
+                    
+                    // 속도 교환
+                    const nx = dx / distance;
+                    const ny = dy / distance;
+                    const p = 2 * (ball.velocityX * nx + ball.velocityY * ny - otherBall.velocityX * nx - otherBall.velocityY * ny) / 2;
+                    
+                    ball.velocityX = ball.velocityX - p * nx;
+                    ball.velocityY = ball.velocityY - p * ny;
+                    otherBall.velocityX = otherBall.velocityX + p * nx;
+                    otherBall.velocityY = otherBall.velocityY + p * ny;
+                    
+                    // 약간의 에너지 손실
+                    ball.velocityX *= 0.95;
+                    ball.velocityY *= 0.95;
+                    otherBall.velocityX *= 0.95;
+                    otherBall.velocityY *= 0.95;
+                }
+            });
+            
+            // 추첨 중에는 더 역동적으로
+            if (drawingInProgress) {
+                // 가끔 랜덤한 힘을 가함
+                if (Math.random() < 0.05) {
+                    ball.velocityX += (Math.random() - 0.5) * 1.0;
+                    ball.velocityY += (Math.random() - 0.5) * 1.0;
+                }
+                
+                // 중력 효과 (약한)
+                ball.velocityY += 0.03;
+                
+                // 팬에 의한 바람 효과
+                const fanForceX = (ball.posX - centerX) * 0.001;
+                const fanForceY = (ball.posY - centerY) * 0.001;
+                ball.velocityX -= fanForceX;
+                ball.velocityY -= fanForceY;
+            } else {
+                // 추첨 중이 아닐 때는 점차 느려지게
+                ball.velocityX *= 0.99;
+                ball.velocityY *= 0.99;
+                
+                // 최소 속도 유지
+                const speed = Math.sqrt(ball.velocityX * ball.velocityX + ball.velocityY * ball.velocityY);
+                if (speed < 0.2) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const boost = 0.2 + Math.random() * 0.1;
+                    ball.velocityX = Math.cos(angle) * boost;
+                    ball.velocityY = Math.sin(angle) * boost;
+                }
+            }
+            
+            // 최대 속도 제한
+            const maxSpeed = drawingInProgress ? 2.5 : 1.2;
+            const currentSpeed = Math.sqrt(ball.velocityX * ball.velocityX + ball.velocityY * ball.velocityY);
+            if (currentSpeed > maxSpeed) {
+                ball.velocityX = (ball.velocityX / currentSpeed) * maxSpeed;
+                ball.velocityY = (ball.velocityY / currentSpeed) * maxSpeed;
+            }
+            
+            // 위치 업데이트
+            element.style.left = (ball.posX - element.offsetWidth / 2) + 'px';
+            element.style.top = (ball.posY - element.offsetHeight / 2) + 'px';
+        });
+        
+        animationFrameId = requestAnimationFrame(animateBalls);
+    }
+    
  
      // 로또 번호 뽑기 (6개)
      function generateLottoNumbers() {
@@ -327,84 +415,64 @@
          }
      }
  
-     // 추첨 애니메이션 강화 (사운드 추가)
-     function enhancedAnimation() {
-         // 추첨기 흔들기
-         const machineBody = document.querySelector('.machine-body');
-         if (machineBody) machineBody.classList.add('shake-hard');
- 
-         // 사용자 상호작용 후에 소리 재생 시도
-         if (soundEnabled) {
-             // 시작 소리 재생
-             playSound(startSound);
- 
-             // 약간 지연 후 기계 소리 재생 (두 소리가 겹치지 않도록)
-             setTimeout(() => {
-                 playSound(machineSound);
-             }, 10);
-         }
- 
-         // 나머지 애니메이션 코드 유지...
-         // 에어 효과 강화
-         const airEffect = document.getElementById('airEffect');
-         if (airEffect) {
-             airEffect.classList.add('air-strong');
-             airEffect.style.animationDuration = (0.3 / speedMode) + 's';
-         }
- 
-         // 팬 속도 대폭 증가
-         const fan = document.querySelector('.fan');
-         if (fan) fan.style.animationDuration = (0.05 / speedMode) + 's';
- 
-         // 볼의 움직임 극적으로 증가
-         balls.forEach(ball => {
-             if (!ball.selected) {
-                 // 볼마다 다양한 애니메이션 효과 적용
-                 const oldAnim = ball.element.className;
-                 ball.element.className = 'ball ball-fast'; // 모든 볼을 빠르게 회전
- 
-                 // 속도 대폭 증가
-                 ball.speed = ball.speed * (5 * speedMode); // 5배 빠르게
- 
-                 // 랜덤 방향 전환으로 더 혼란스럽게
-                 if (Math.random() > 0.5) {
-                     ball.speed = -ball.speed;
-                 }
-             }
-         });
- 
-         // 일정 시간 후 상태 복구 (속도모드에 따라 조정)
-         const resetDelay = 3000 / speedMode;
-         setTimeout(() => {
-             // 애니메이션 관련 코드는 유지...
-             if (machineBody) machineBody.classList.remove('shake-hard');
-             if (airEffect) {
-                 airEffect.classList.remove('air-strong');
-                 airEffect.style.animationDuration = (1 / speedMode) + 's';
-             }
-             if (fan) fan.style.animationDuration = (0.5 / speedMode) + 's';
- 
-             // 공 움직임 정상화 - 원래보다는 빠르게
-             balls.forEach(ball => {
-                 if (!ball.selected) {
-                     ball.speed = ball.speed / (3 * speedMode); // 원래보다 약간 빠르게
- 
-                     // 원래 애니메이션 유형으로 복구
-                     const animType = ball.animType;
-                     let animClass = 'ball-rotate';
- 
-                     switch(animType) {
-                         case 0: animClass = 'ball-rotate'; break;
-                         case 1: animClass = 'ball-fast'; break;
-                         case 2: animClass = 'ball-reverse'; break;
-                         case 3: animClass = 'ball-bounce'; break;
-                     }
- 
-                     ball.element.className = `ball ${animClass}`;
-                 }
-             });
-         }, resetDelay);
-     }
+    // 추첨 애니메이션 강화 (사운드 추가)
+    function enhancedAnimation() {
+        // 추첨기 흔들기
+        const machineBody = document.querySelector('.machine-body');
+        if (machineBody) machineBody.classList.add('shake-hard');
+    
+        // 사용자 상호작용 후에 소리 재생 시도
+        if (soundEnabled) {
+            // 시작 소리 재생
+            playSound(startSound);
+    
+            // 약간 지연 후 기계 소리 재생 (두 소리가 겹치지 않도록)
+            setTimeout(() => {
+                playSound(machineSound);
+            }, 100);
+        }
+    
+        // 에어 효과 강화
+        const airEffect = document.getElementById('airEffect');
+        if (airEffect) {
+            airEffect.classList.add('air-strong');
+            airEffect.style.animationDuration = (0.3 / speedMode) + 's';
+        }
+    
+        // 팬 속도 대폭 증가
+        const fan = document.querySelector('.fan');
+        if (fan) fan.style.animationDuration = (0.05 / speedMode) + 's';
+    
+        // 볼에 임의의 힘 가하기 - 활발하게 움직임
+        balls.forEach(ball => {
+            if (ball.selected) return;
+            
+            // 강력한 임의의 방향으로 힘 가하기
+            const angle = Math.random() * Math.PI * 2;
+            const force = 1.5 + Math.random() * 1.5;
+            
+            ball.velocityX += Math.cos(angle) * force;
+            ball.velocityY += Math.sin(angle) * force;
+            
+            // 볼 회전 효과 추가
+            const rotationClass = Math.random() > 0.5 ? 'ball-rotate' : 'ball-reverse';
+            const speedClass = Math.random() > 0.3 ? ' ball-fast' : '';
+            
+            ball.element.className = 'ball ' + rotationClass + speedClass;
+        });
+    
+        // 일정 시간 후 상태 복구 (속도모드에 따라 조정)
+        const resetDelay = 3000 / speedMode;
+        setTimeout(() => {
+            // 애니메이션 관련 코드는 유지...
+            if (machineBody) machineBody.classList.remove('shake-hard');
+            if (airEffect) {
+                airEffect.classList.remove('air-strong');
+                airEffect.style.animationDuration = (1 / speedMode) + 's';
+            }
+            if (fan) fan.style.animationDuration = (0.5 / speedMode) + 's';
+        }, resetDelay);
+    }
  
      // 공 선택하고 떨어뜨리기 (사운드 추가)
      function selectBall(number) {
@@ -497,11 +565,10 @@
      async function drawLottery() {
          if (drawingInProgress) return;
  
-         const {startBtn, resetBtn} = machineElements;
+         const {startBtn} = machineElements;
  
          drawingInProgress = true;
          startBtn.disabled = true;
-         resetBtn.disabled = true;
  
          // 기존 결과 초기화
          machineElements.resultContainer.innerHTML = '';
@@ -598,7 +665,6 @@
  
          // 추첨 완료 후 버튼 활성화
          startBtn.disabled = false;
-         resetBtn.disabled = false;
          drawingInProgress = false;
      }
  
@@ -829,12 +895,30 @@
          }
      }
  
+     // 새 함수: 초기화 후 추첨 시작을 순차적으로 수행
+     async function startDrawing() {
+         if (drawingInProgress) return;
+         
+         // 먼저 초기화 수행
+         initMachine();
+         
+         // 초기화 후 잠시 대기 (애니메이션이 원활하게 시작하도록)
+         await new Promise(resolve => setTimeout(resolve, 300));
+         
+         // 추첨 시작
+         drawLottery();
+     }
+ 
      // 이벤트 리스너 등록
      function setupEventListeners() {
-         const {startBtn, resetBtn, soundControl, speedToggleBtn} = machineElements;
+         const {startBtn, soundControl, speedToggleBtn} = machineElements;
  
-         if (startBtn) startBtn.addEventListener('click', drawLottery);
-         if (resetBtn) resetBtn.addEventListener('click', initMachine);
+         // 시작 버튼이 초기화+추첨을 모두 실행하도록 변경
+         if (startBtn) startBtn.addEventListener('click', startDrawing);
+         
+         // 다시하기 버튼은 더 이상 사용하지 않음
+         // resetBtn 관련 코드 제거
+         
          if (soundControl) soundControl.addEventListener('click', toggleSound);
          
          // 속도 토글 버튼 이벤트 리스너 추가
@@ -851,6 +935,32 @@
                  }
              });
          });
+     }
+ 
+     // finishDrawing 함수가 있다면 여기서도 resetBtn 관련 코드 제거
+     function finishDrawing() {
+         // 애니메이션 초기화
+         const machineBody = document.querySelector('.machine-body');
+         if (machineBody) machineBody.classList.remove('shake-hard');
+         
+         const airEffect = document.getElementById('airEffect');
+         if (airEffect) airEffect.classList.remove('air-strong');
+         
+         const fan = document.querySelector('.fan');
+         if (fan) fan.style.animationDuration = '0.5s';
+         
+         // 사운드 중지
+         if (soundEnabled) {
+             machineSound.pause();
+             machineSound.currentTime = 0;
+         }
+         
+         // 결과음 재생
+         playSound(resultSound);
+         
+         // 상태 초기화
+         drawingInProgress = false;
+         document.getElementById('startBtn').disabled = false;
      }
  
      // 이벤트 리스너 등록
