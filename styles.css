@@ -1015,3 +1015,38 @@ button:disabled {
         gap: 10px;
     }
 }
+
+/* 일괄 저장 버튼 스타일 */
+.batch-save-btn {
+    background-color: #2e7d32;
+    color: white;
+    margin-top: 20px;
+    padding: 12px 25px;
+    font-size: 16px;
+    width: auto;
+    min-width: 200px;
+}
+
+.batch-save-btn:hover {
+    background-color: #1b5e20;
+}
+
+/* 일괄 삭제 버튼 스타일 */
+.batch-delete-btn {
+    background-color: #d32f2f;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.batch-delete-btn:hover {
+    background-color: #b71c1c;
+}
+
+.batch-action-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
