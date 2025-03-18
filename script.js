@@ -323,9 +323,9 @@
                     const moveY = (dy / distance) * overlap * 0.5;
                     
                     ball.posX += moveX;
-                    ball.posY += moveY;
+                    ball.posY -= moveY;
                     otherBall.posX -= moveX;
-                    otherBall.posY -= moveY;
+                    otherBall.posY += moveY;
                     
                     // 속도 교환
                     const nx = dx / distance;
@@ -391,7 +391,6 @@
         
         animationFrameId = requestAnimationFrame(animateBalls);
     }
-    
  
      // 로또 번호 뽑기 (6개)
      function generateLottoNumbers() {
@@ -1167,52 +1166,64 @@
          const inputs = document.querySelectorAll('.winning-number-input');
          const bonusInput = document.getElementById('bonusNumberInput');
          
-         // 버튼 컨테이너 생성
-         let buttonContainer = document.getElementById('fetchButtonsContainer');
-         if (!buttonContainer) {
-             buttonContainer = document.createElement('div');
-             buttonContainer.id = 'fetchButtonsContainer';
-             buttonContainer.className = 'fetch-buttons-container';
-             buttonContainer.style.display = 'flex';
-             buttonContainer.style.flexWrap = 'wrap';
-             buttonContainer.style.gap = '10px';
-             buttonContainer.style.marginBottom = '15px';
-             
-             // 최신 당첨번호 가져오기 버튼
-             const fetchLatestBtn = document.createElement('button');
-             fetchLatestBtn.id = 'fetchLatestBtn';
-             fetchLatestBtn.className = 'fetch-latest-btn';
-             fetchLatestBtn.textContent = '최신 당첨번호 가져오기';
-             
-             // 특정 회차 검색 입력창과 버튼
-             const roundInputContainer = document.createElement('div');
-             roundInputContainer.style.display = 'flex';
-             
-             const roundInput = document.createElement('input');
-             roundInput.type = 'number';
-             roundInput.id = 'roundInput';
-             roundInput.min = '1';
-             roundInput.placeholder = '회차 입력';
-             roundInput.style.width = '100px';
-             roundInput.style.marginRight = '5px';
-             roundInput.style.padding = '0 10px';
-             
-             const fetchRoundBtn = document.createElement('button');
-             fetchRoundBtn.id = 'fetchRoundBtn';
-             fetchRoundBtn.className = 'fetch-latest-btn';
-             fetchRoundBtn.style.backgroundColor = '#3F51B5';
-             fetchRoundBtn.textContent = '회차 조회';
-             
-             roundInputContainer.appendChild(roundInput);
-             roundInputContainer.appendChild(fetchRoundBtn);
-             
-             // 버튼 추가
-             buttonContainer.appendChild(fetchLatestBtn);
-             buttonContainer.appendChild(roundInputContainer);
-             
-             // 버튼 컨테이너를 저장 버튼 앞에 삽입
-             saveWinningBtn.parentNode.insertBefore(buttonContainer, saveWinningBtn);
-         }
+    // 버튼 컨테이너 생성
+    let buttonContainer = document.getElementById('fetchButtonsContainer');
+    if (!buttonContainer) {
+        buttonContainer = document.createElement('div');
+        buttonContainer.id = 'fetchButtonsContainer';
+        buttonContainer.className = 'fetch-buttons-container';
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.flexWrap = 'wrap';
+        buttonContainer.style.gap = '10px';
+        buttonContainer.style.marginBottom = '15px';
+        
+        // CORS 정보 추가
+        const corsInfo = document.createElement('div');
+        corsInfo.className = 'cors-info';
+        corsInfo.innerHTML = `<small style="display:block;margin:8px 0;padding:8px;background:#f8f9fa;border:1px solid #ddd;border-radius:4px;color:#666;">
+            * CORS 오류 발생 시 여러 프록시 서버를 자동으로 시도합니다.<br>
+            * 외부 사이트에서 사용 시 <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank" style="color:blue;text-decoration:underline">여기를 클릭하여 CORS 프록시 사용 권한을 활성화</a>하면 조회 확률이 높아집니다.
+        </small>`;
+        
+        // 최신 당첨번호 가져오기 버튼
+        const fetchLatestBtn = document.createElement('button');
+        fetchLatestBtn.id = 'fetchLatestBtn';
+        fetchLatestBtn.className = 'fetch-latest-btn';
+        fetchLatestBtn.textContent = '최신 당첨번호 가져오기';
+        
+        // 특정 회차 검색 입력창과 버튼
+        const roundInputContainer = document.createElement('div');
+        roundInputContainer.style.display = 'flex';
+        
+        const roundInput = document.createElement('input');
+        roundInput.type = 'number';
+        roundInput.id = 'roundInput';
+        roundInput.min = '1';
+        roundInput.placeholder = '회차 입력';
+        roundInput.style.width = '100px';
+        roundInput.style.marginRight = '5px';
+        roundInput.style.padding = '0 10px';
+        
+        const fetchRoundBtn = document.createElement('button');
+        fetchRoundBtn.id = 'fetchRoundBtn';
+        fetchRoundBtn.className = 'fetch-latest-btn';
+        fetchRoundBtn.style.backgroundColor = '#3F51B5';
+        fetchRoundBtn.textContent = '회차 조회';
+        
+        roundInputContainer.appendChild(roundInput);
+        roundInputContainer.appendChild(fetchRoundBtn);
+        
+        // 버튼 추가
+        buttonContainer.appendChild(fetchLatestBtn);
+        buttonContainer.appendChild(roundInputContainer);
+        buttonContainer.appendChild(corsInfo);
+        
+        // 버튼 컨테이너를 저장 버튼 앞에 삽입
+        const saveWinningBtn = document.getElementById('saveWinningBtn');
+        if (saveWinningBtn && saveWinningBtn.parentNode) {
+            saveWinningBtn.parentNode.insertBefore(buttonContainer, saveWinningBtn);
+        }
+    }
          
          // 최신 당첨번호 가져오기 버튼 이벤트
          document.getElementById('fetchLatestBtn').addEventListener('click', async () => {
@@ -1496,132 +1507,145 @@
          resultsContainer.innerHTML = html;
      }
  
-     // 동행복권 최신 당첨번호를 가져오는 함수 (CORS 문제 해결)
-async function fetchLatestWinningNumbers() {
-    try {
-        // 로딩 표시 추가
-        const container = document.getElementById('currentWinningNumbers');
-        container.innerHTML = '<div class="loading">최신 당첨번호를 가져오는 중입니다...</div>';
-        
-        // 프록시 서버를 통한 요청 (CORS 우회)
-        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-        const targetUrl = 'https://www.dhlottery.co.kr/common.do?method=getLottoNumber';
-        
-        // 현재 날짜 기준 추정 회차 계산
-        const firstDrawDate = new Date('2002-12-07');
-        const today = new Date();
-        const diffTime = Math.abs(today - firstDrawDate);
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        const diffWeeks = Math.floor(diffDays / 7);
-        const estimatedCurrentRound = diffWeeks + 1;
-        
-        console.log("추정 현재 회차:", estimatedCurrentRound);
-        
-        // 최근 5개 회차를 시도
-        let latestData = null;
-        let latestRound = 0;
-        
-        for (let i = 0; i < 5; i++) {
-            const round = estimatedCurrentRound - i;
-            try {
-                console.log(`${round}회차 조회 시도 중...`);
+    // 동행복권 최신 당첨번호를 가져오는 함수 (CORS 문제 해결)
+    async function fetchLatestWinningNumbers() {
+        try {
+            // 로딩 표시 추가
+            const container = document.getElementById('currentWinningNumbers');
+            container.innerHTML = '<div class="loading">최신 당첨번호를 가져오는 중입니다...</div>';
+            
+            // 여러 CORS 프록시 중 하나 선택
+            const proxyOptions = [
+                'https://cors-anywhere.herokuapp.com/',
+                'https://api.allorigins.win/raw?url=',
+                'https://corsproxy.io/?'
+            ];
+            
+            // 현재 날짜 기준 추정 회차 계산
+            const firstDrawDate = new Date('2002-12-07');
+            const today = new Date();
+            const diffTime = Math.abs(today - firstDrawDate);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            const diffWeeks = Math.floor(diffDays / 7);
+            const estimatedCurrentRound = diffWeeks + 1;
+            
+            console.log("추정 현재 회차:", estimatedCurrentRound);
+            
+            // 최근 5개 회차를 시도
+            let latestData = null;
+            let latestRound = 0;
+            let successfulProxy = null;
+            let lastError = null;
+            
+            // 각 프록시 서버를 순차적으로 시도
+            for (const proxyUrl of proxyOptions) {
+                if (latestData) break; // 이미 성공했으면 중단
                 
-                // CORS 프록시를 통한 요청
-                const response = await fetch(`${proxyUrl}${targetUrl}&drwNo=${round}`, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'  // CORS-Anywhere 요구사항
+                const targetUrl = 'https://www.dhlottery.co.kr/common.do?method=getLottoNumber';
+                
+                // 최근 5개 회차 시도
+                for (let i = 0; i < 5; i++) {
+                    const round = estimatedCurrentRound - i;
+                    try {
+                        console.log(`[${proxyUrl}] ${round}회차 조회 시도 중...`);
+                        
+                        // 프록시 서버에 따라 다른 요청 방식 사용
+                        let response;
+                        if (proxyUrl.includes('allorigins')) {
+                            // allorigins는 인코딩된 URL 필요
+                            const encodedUrl = encodeURIComponent(`${targetUrl}&drwNo=${round}`);
+                            response = await fetch(`${proxyUrl}${encodedUrl}`);
+                        } else {
+                            // 다른 프록시는 표준 방식
+                            response = await fetch(`${proxyUrl}${targetUrl}&drwNo=${round}`, {
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            });
+                        }
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        
+                        const data = await response.json();
+                        console.log(`${round}회차 응답:`, data);
+                        
+                        if (data && data.returnValue === 'success') {
+                            latestData = data;
+                            latestRound = round;
+                            successfulProxy = proxyUrl;
+                            console.log(`${proxyUrl}로 성공적으로 데이터 가져옴`);
+                            break;
+                        }
+                    } catch (e) {
+                        console.error(`${round}회차 조회 실패 [${proxyUrl}]:`, e);
+                        lastError = e;
                     }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                console.log(`${round}회차 응답:`, data);
-                
-                if (data && data.returnValue === 'success') {
-                    latestData = data;
-                    latestRound = round;
-                    break;
-                }
-            } catch (e) {
-                console.error(`${round}회차 조회 실패:`, e);
-                
-                // CORS 관련 오류 발생 시 대체 방법 시도
-                if (e.message.includes('CORS') || e.message.includes('Failed to fetch')) {
-                    console.log("CORS 오류 감지, 대체 방법 시도...");
-                    return await fetchWinningNumbersWithoutCORS(round);
                 }
             }
-        }
-        
-        if (!latestData) {
-            // CORS 문제일 가능성이 높으므로 대체 방법 시도
-            console.log("API에서 데이터를 가져올 수 없습니다. 대체 방법 시도...");
-            return await fetchWinningNumbersWithoutCORS(estimatedCurrentRound);
-        }
-        
-        // 당첨번호 추출
-        const winningNumbers = [
-            latestData.drwtNo1,
-            latestData.drwtNo2,
-            latestData.drwtNo3,
-            latestData.drwtNo4,
-            latestData.drwtNo5,
-            latestData.drwtNo6
-        ].sort((a, b) => a - b);  // 정렬 적용
-        
-        const bonusNumber = latestData.bnusNo;
-        
-        // 추첨일자 형식 변환
-        const drawDate = new Date(latestData.drwNoDate);
-        const formattedDate = drawDate.toLocaleDateString('ko-KR', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        });
-        
-        console.log("API에서 가져온 번호:", winningNumbers, "보너스:", bonusNumber);
-        
-        // 번호가 정상적으로 추출되었는지 확인
-        if (winningNumbers.length === 6 && bonusNumber) {
-            // 입력 필드에 번호 채우기
-            const inputs = document.querySelectorAll('.winning-number-input');
-            inputs.forEach((input, index) => {
-                input.value = winningNumbers[index];
+            
+            if (!latestData) {
+                throw new Error(`모든 프록시 서버 시도 실패: ${lastError?.message || '알 수 없는 오류'}`);
+            }
+            
+            // 당첨번호 추출
+            const winningNumbers = [
+                latestData.drwtNo1,
+                latestData.drwtNo2,
+                latestData.drwtNo3,
+                latestData.drwtNo4,
+                latestData.drwtNo5,
+                latestData.drwtNo6
+            ].sort((a, b) => a - b);  // 정렬 적용
+            
+            const bonusNumber = latestData.bnusNo;
+            
+            // 추첨일자 형식 변환
+            const drawDate = new Date(latestData.drwNoDate);
+            const formattedDate = drawDate.toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
             });
             
-            // 보너스 번호 입력
-            document.getElementById('bonusNumberInput').value = bonusNumber;
+            console.log("API에서 가져온 번호:", winningNumbers, "보너스:", bonusNumber);
             
-            // 당첨번호 저장
-            saveWinningNumbers(winningNumbers, bonusNumber, `${latestRound}회 (${formattedDate})`);
+            // 번호가 정상적으로 추출되었는지 확인
+            if (winningNumbers.length === 6 && bonusNumber) {
+                // 입력 필드에 번호 채우기
+                const inputs = document.querySelectorAll('.winning-number-input');
+                inputs.forEach((input, index) => {
+                    input.value = winningNumbers[index];
+                });
+                
+                // 보너스 번호 입력
+                document.getElementById('bonusNumberInput').value = bonusNumber;
+                
+                // 당첨번호 저장
+                saveWinningNumbers(winningNumbers, bonusNumber, `${latestRound}회 (${formattedDate})`);
+                
+                // UI 업데이트
+                displayCurrentWinningNumbers();
+                
+                // 저장된 번호와 비교
+                checkSavedNumbersAgainstWinning();
+                
+                return {
+                    success: true,
+                    numbers: winningNumbers,
+                    bonus: bonusNumber,
+                    drawNo: latestRound,
+                    drawDate: formattedDate,
+                    proxy: successfulProxy
+                };
+            } else {
+                throw new Error('당첨번호 구조에 오류가 있습니다');
+            }
+        } catch (error) {
+            console.error('당첨번호 가져오기 실패:', error);
             
-            // UI 업데이트
-            displayCurrentWinningNumbers();
-            
-            // 저장된 번호와 비교
-            checkSavedNumbersAgainstWinning();
-            
-            return {
-                success: true,
-                numbers: winningNumbers,
-                bonus: bonusNumber,
-                drawNo: latestRound,
-                drawDate: formattedDate
-            };
-        } else {
-            throw new Error('당첨번호 구조에 오류가 있습니다');
-        }
-    } catch (error) {
-        console.error('당첨번호 가져오기 실패:', error);
-        
-        // 대체 방법 시도
-        try {
-            return await fetchWinningNumbersWithoutCORS();
-        } catch (fallbackError) {
-            // 모든 방법 실패 시 에러 메시지 표시
+            // 에러 메시지 표시
             const container = document.getElementById('currentWinningNumbers');
             container.innerHTML = `<div class="error">당첨번호를 가져오는 중 오류가 발생했습니다.<br>
                 네트워크 연결을 확인하거나 수동으로 입력해 주세요.<br>
@@ -1630,7 +1654,6 @@ async function fetchLatestWinningNumbers() {
             return { success: false, error: error.message };
         }
     }
-}
 
 // 특정 회차의 당첨번호를 가져오는 함수 (CORS 문제 해결)
 async function fetchLottoNumberByRound(round) {
@@ -1639,28 +1662,58 @@ async function fetchLottoNumberByRound(round) {
         const container = document.getElementById('currentWinningNumbers');
         container.innerHTML = '<div class="loading">당첨번호를 가져오는 중입니다...</div>';
         
-        // 프록시 서버를 통한 요청 (CORS 우회)
-        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+        // 여러 CORS 프록시 중 하나 선택
+        const proxyOptions = [
+            'https://cors-anywhere.herokuapp.com/',
+            'https://api.allorigins.win/raw?url=',
+            'https://corsproxy.io/?'
+        ];
+        
         const targetUrl = 'https://www.dhlottery.co.kr/common.do?method=getLottoNumber';
+        let response = null;
+        let data = null;
+        let successfulProxy = null;
+        let lastError = null;
         
-        console.log(`${round}회차 조회 시도 중...`);
-        
-        // CORS 프록시를 통한 요청
-        const response = await fetch(`${proxyUrl}${targetUrl}&drwNo=${round}`, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'  // CORS-Anywhere 요구사항
+        // 각 프록시 서버를 순차적으로 시도
+        for (const proxyUrl of proxyOptions) {
+            try {
+                console.log(`[${proxyUrl}] ${round}회차 조회 시도 중...`);
+                
+                // 프록시 서버에 따라 다른 요청 방식 사용
+                if (proxyUrl.includes('allorigins')) {
+                    // allorigins는 인코딩된 URL 필요
+                    const encodedUrl = encodeURIComponent(`${targetUrl}&drwNo=${round}`);
+                    response = await fetch(`${proxyUrl}${encodedUrl}`);
+                } else {
+                    // 다른 프록시는 표준 방식
+                    response = await fetch(`${proxyUrl}${targetUrl}&drwNo=${round}`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                data = await response.json();
+                console.log(`${round}회차 응답:`, data);
+                
+                if (data && data.returnValue === 'success') {
+                    successfulProxy = proxyUrl;
+                    console.log(`${proxyUrl}로 성공적으로 데이터 가져옴`);
+                    break;
+                }
+            } catch (e) {
+                console.error(`${round}회차 조회 실패 [${proxyUrl}]:`, e);
+                lastError = e;
             }
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
         }
         
-        const data = await response.json();
-        console.log(`${round}회차 응답:`, data);
-        
-        if (data.returnValue !== 'success') {
-            throw new Error(`${round}회차 당첨번호를 찾을 수 없습니다`);
+        if (!data || data.returnValue !== 'success') {
+            throw new Error(`${round}회차 당첨번호를 찾을 수 없습니다. ${lastError?.message || ''}`);
         }
         
         return {
@@ -1674,8 +1727,9 @@ async function fetchLottoNumberByRound(round) {
                 data.drwtNo4,
                 data.drwtNo5,
                 data.drwtNo6
-            ],
-            bonus: data.bnusNo
+            ].sort((a, b) => a - b),  // 정렬 적용
+            bonus: data.bnusNo,
+            proxy: successfulProxy
         };
     } catch (error) {
         console.error(`${round}회차 당첨번호 가져오기 실패:`, error);
