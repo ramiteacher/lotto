@@ -188,209 +188,282 @@
          lotteryMachine.appendChild(fragment);
      }
  
-     // 로또 공 생성 함수 수정
-     function createBalls(ballContainer) {
-         const containerWidth = 400; // 기본 컨테이너 너비
-         const containerHeight = 400; // 기본 컨테이너 높이
-         const centerX = containerWidth / 2;
-         const centerY = containerHeight / 2;
-
-         const maxRadius = Math.min(containerWidth, containerHeight) / 2 * 0.85;
-
-         for (let i = 1; i <= 45; i++) {
-             const ballElement = document.createElement('div');
-             ballElement.className = 'ball' + (Math.random() > 0.5 ? ' ball-rotate' : ' ball-reverse');
-             ballElement.style.backgroundColor = getBallColor(i);
-             ballElement.textContent = i;
-             
-             // 중심을 기준으로 초기 위치 설정
-             const angle = Math.random() * Math.PI * 2; // 0~2PI 사이의 랜덤 각도
-             // 작은 반경으로 시작하여 중앙에 더 집중되게 함
-             const radius = Math.min(containerWidth, containerHeight) * 0.15 * Math.random();
-             
-             // 컨테이너의 중심점
-             const centerX = containerWidth / 2;
-             const centerY = containerHeight / 2;
-             
-             // 볼의 초기 위치 계산 (중심에서 시작)
-             const ballSize = 40; // 볼 크기
-             const initialX = centerX + Math.cos(angle) * radius - ballSize / 2;
-             const initialY = centerY + Math.sin(angle) * radius - ballSize / 2;
-             
-             ballElement.style.left = initialX + 'px';
-             ballElement.style.top = initialY + 'px';
-             
-             ballContainer.appendChild(ballElement);
-             
-             // 볼 객체 정보 저장 - 매우 작은 바운스 효과
-             balls.push({
-                 number: i,
-                 element: ballElement,
-                 angle: angle,
-                 speed: 0.4 + Math.random() * 0.2, // 속도 범위 축소 (0.4~0.6)
-                 bouncePhase: Math.random() * Math.PI * 2, // 랜덤한 위상차
-                 bounceHeight: 1 + Math.random() * 2, // 최소한의 바운스 (1~3px)
-                 bounceSpeed: 0.3 + Math.random() * 0.4 // 낮은 바운스 속도
-             });
-         }
-     }
- 
-    // 볼 애니메이션 - 자연스러운 물리 기반 움직임 구현
-    function animateBalls() {
-        if (!isAnimating) return;
+// 로또 공 생성 함수 개선 - 전체 공간에 고르게 분포
+function createBalls(ballContainer) {
+    const containerWidth = 400;
+    const containerHeight = 400;
+    const ballSize = 40;
     
-        const ballContainer = document.querySelector('.ball-container');
-        if (!ballContainer) return;
-        
-        const containerWidth = ballContainer.offsetWidth;
-        const containerHeight = ballContainer.offsetHeight;
-        
-        // 컨테이너의 중심점
-        const centerX = containerWidth / 2;
-        const centerY = containerHeight / 2;
-        
-        // 최대 반경 (원형 컨테이너 가정)
-        const maxRadius = Math.min(containerWidth, containerHeight) / 2 * 0.85;
-        
-        balls.forEach(ball => {
-            const element = ball.element;
-            if (!element || !element.parentNode) return;
+    // 공간 분할을 위한 격자 생성 (볼 간 간격을 확보하기 위함)
+    const gridSize = Math.ceil(ballSize * 1.5); // 볼 크기보다 여유있게
+    const rows = Math.floor(containerHeight / gridSize);
+    const cols = Math.floor(containerWidth / gridSize);
+    
+    // 격자 위치 생성 (균등한 분포 위해)
+    const positions = [];
+    
+    // 컨테이너 전체에 격자점 생성
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            // 격자 위치에 약간의 랜덤성 추가
+            const x = col * gridSize + gridSize/2 + (Math.random() - 0.5) * gridSize/2;
+            const y = row * gridSize + gridSize/2 + (Math.random() - 0.5) * gridSize/2;
             
-            // 초기화되지 않은 속도 속성 초기화
-            if (ball.velocityX === undefined) {
-                ball.velocityX = (Math.random() - 0.5) * 1.2;
-                ball.velocityY = (Math.random() - 0.5) * 1.2;
-                ball.posX = parseFloat(element.style.left) + element.offsetWidth / 2;
-                ball.posY = parseFloat(element.style.top) + element.offsetHeight / 2;
+            // 컨테이너 내에 있는지 확인 (원형 영역으로 제한)
+            const centerX = containerWidth / 2;
+            const centerY = containerHeight / 2;
+            const maxRadius = Math.min(containerWidth, containerHeight) / 2 * 0.85;
+            
+            const distFromCenter = Math.sqrt(
+                Math.pow(x - centerX, 2) + 
+                Math.pow(y - centerY, 2)
+            );
+            
+            // 유효 영역 내에 있는 위치만 저장
+            if (distFromCenter < maxRadius - ballSize/2) {
+                positions.push({x, y});
             }
+        }
+    }
+    
+    // 위치 충분히 있는지 확인
+    if (positions.length < 45) {
+        console.warn(`사용 가능한 위치가 부족합니다. 필요: 45, 사용 가능: ${positions.length}`);
+        // 위치가 부족하면 추가 생성
+        while (positions.length < 45) {
+            // 임의 위치 생성
+            const angle = Math.random() * Math.PI * 2;
+            const radius = Math.random() * (Math.min(containerWidth, containerHeight) / 2 * 0.8 - ballSize/2);
+            const x = containerWidth/2 + radius * Math.cos(angle);
+            const y = containerHeight/2 + radius * Math.sin(angle);
+            positions.push({x, y});
+        }
+    }
+    
+    // 위치 랜덤하게 섞기
+    for (let i = positions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [positions[i], positions[j]] = [positions[j], positions[i]];
+    }
+    
+    // 45개만 사용
+    const usablePositions = positions.slice(0, 45);
+    
+    // 볼 생성
+    for (let i = 1; i <= 45; i++) {
+        const ballElement = document.createElement('div');
+        ballElement.className = 'ball' + (Math.random() > 0.5 ? ' ball-rotate' : ' ball-reverse');
+        ballElement.style.backgroundColor = getBallColor(i);
+        ballElement.textContent = i;
+        
+        const pos = usablePositions[i-1];
+        ballElement.style.left = (pos.x - ballSize/2) + 'px';
+        ballElement.style.top = (pos.y - ballSize/2) + 'px';
+        
+        ballContainer.appendChild(ballElement);
+        
+        // 볼 객체 정보
+        balls.push({
+            number: i,
+            element: ballElement,
+            posX: pos.x,
+            posY: pos.y,
+            velocityX: (Math.random() - 0.5) * 1.0, // 초기 속도 낮게 설정
+            velocityY: (Math.random() - 0.5) * 1.0,
+            settled: false // 추첨 후 정착 상태
+        });
+    }
+}
+
+// 볼 애니메이션 함수 수정
+function animateBalls() {
+    if (!isAnimating) return;
+    
+    const ballContainer = document.querySelector('.ball-container');
+    if (!ballContainer) return;
+    
+    const containerWidth = ballContainer.offsetWidth;
+    const containerHeight = ballContainer.offsetHeight;
+    const centerX = containerWidth / 2;
+    const centerY = containerHeight / 2;
+    const maxRadius = Math.min(containerWidth, containerHeight) / 2 * 0.85;
+    
+    // 추첨이 끝났는지 확인
+    const drawingFinished = !drawingInProgress && balls.some(ball => ball.selected);
+    
+    // 공통 물리 계수
+    const damping = 0.97; // 에너지 손실
+    
+    // 추첨 종료 후 중력
+    const gravity = drawingFinished ? 0.3 : 0; 
+    const floorY = containerHeight - 20; // 바닥 위치 (약간 여유)
+    const friction = 0.95; // 바닥 마찰
+    
+    balls.forEach(ball => {
+        const element = ball.element;
+        if (!element || !element.parentNode || ball.selected) return;
+        
+        // 볼 크기
+        const ballRadius = element.offsetWidth / 2;
+        
+        // 추첨 중 또는 일반 상태
+        if (!drawingFinished) {
+            // 속도 적용
+            ball.posX += ball.velocityX * speedMode;
+            ball.posY += ball.velocityY * speedMode;
             
-            // 추첨 중일 때 더 활발한 움직임
-            const movementFactor = drawingInProgress ? 2.5 : 1;
-            
-            // 새 위치 계산
-            ball.posX += ball.velocityX * speedMode * movementFactor;
-            ball.posY += ball.velocityY * speedMode * movementFactor;
-            
-            // 원형 경계 충돌 감지
+            // 벽 충돌 감지 (원형 경계)
             const distFromCenter = Math.sqrt(
                 Math.pow(ball.posX - centerX, 2) + 
                 Math.pow(ball.posY - centerY, 2)
             );
             
-            const ballRadius = element.offsetWidth / 2;
-            
             if (distFromCenter + ballRadius > maxRadius) {
-                // 충돌 지점 계산
+                // 충돌 후 반사 각도 계산
                 const angle = Math.atan2(ball.posY - centerY, ball.posX - centerX);
-                
-                // 충돌 처리 - 경계에서 약간 안쪽으로 이동
                 ball.posX = centerX + (maxRadius - ballRadius) * Math.cos(angle);
                 ball.posY = centerY + (maxRadius - ballRadius) * Math.sin(angle);
                 
                 // 속도 반사
                 const normalX = (ball.posX - centerX) / distFromCenter;
                 const normalY = (ball.posY - centerY) / distFromCenter;
-                
                 const dotProduct = ball.velocityX * normalX + ball.velocityY * normalY;
                 
-                ball.velocityX = ball.velocityX - 2 * dotProduct * normalX;
-                ball.velocityY = ball.velocityY - 2 * dotProduct * normalY;
+                ball.velocityX = (ball.velocityX - 2 * dotProduct * normalX) * damping;
+                ball.velocityY = (ball.velocityY - 2 * dotProduct * normalY) * damping;
                 
-                // 속도 감소 (에너지 손실)
-                ball.velocityX *= 0.8;
-                ball.velocityY *= 0.8;
-                
-                // 랜덤 요소 추가로 자연스러운 움직임
-                if (drawingInProgress) {
+                // 추첨 중에는 약간 활발하게 움직이도록 추가 속도
+                if (drawingInProgress && Math.random() < 0.3) {
                     ball.velocityX += (Math.random() - 0.5) * 0.5;
                     ball.velocityY += (Math.random() - 0.5) * 0.5;
                 }
             }
             
-            // 볼끼리 충돌 감지 및 처리
-            balls.forEach(otherBall => {
-                if (ball === otherBall || !otherBall.posX || !otherBall.posY || ball.selected || otherBall.selected) return;
-                
-                const dx = ball.posX - otherBall.posX;
-                const dy = ball.posY - otherBall.posY;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                const minDistance = element.offsetWidth;
-                
-                if (distance < minDistance) {
-                    // 충돌 해결 - 볼 분리
-                    const overlap = minDistance - distance;
-                    const moveX = (dx / distance) * overlap * 0.5;
-                    const moveY = (dy / distance) * overlap * 0.5;
-                    
-                    ball.posX += moveX;
-                    ball.posY -= moveY;
-                    otherBall.posX -= moveX;
-                    otherBall.posY += moveY;
-                    
-                    // 속도 교환
-                    const nx = dx / distance;
-                    const ny = dy / distance;
-                    const p = 2 * (ball.velocityX * nx + ball.velocityY * ny - otherBall.velocityX * nx - otherBall.velocityY * ny) / 2;
-                    
-                    ball.velocityX = ball.velocityX - p * nx;
-                    ball.velocityY = ball.velocityY - p * ny;
-                    otherBall.velocityX = otherBall.velocityX + p * nx;
-                    otherBall.velocityY = otherBall.velocityY + p * ny;
-                    
-                    // 약간의 에너지 손실
-                    ball.velocityX *= 0.95;
-                    ball.velocityY *= 0.95;
-                    otherBall.velocityX *= 0.95;
-                    otherBall.velocityY *= 0.95;
-                }
-            });
-            
-            // 추첨 중에는 더 역동적으로
+            // 추첨 중 지속적인 움직임을 위한 최소 속도 유지
             if (drawingInProgress) {
-                // 가끔 랜덤한 힘을 가함
-                if (Math.random() < 0.05) {
-                    ball.velocityX += (Math.random() - 0.5) * 1.0;
-                    ball.velocityY += (Math.random() - 0.5) * 1.0;
-                }
-                
-                // 중력 효과 (약한)
-                ball.velocityY += 0.03;
-                
-                // 팬에 의한 바람 효과
-                const fanForceX = (ball.posX - centerX) * 0.001;
-                const fanForceY = (ball.posY - centerY) * 0.001;
-                ball.velocityX -= fanForceX;
-                ball.velocityY -= fanForceY;
-            } else {
-                // 추첨 중이 아닐 때는 점차 느려지게
-                ball.velocityX *= 0.99;
-                ball.velocityY *= 0.99;
-                
-                // 최소 속도 유지
                 const speed = Math.sqrt(ball.velocityX * ball.velocityX + ball.velocityY * ball.velocityY);
-                if (speed < 0.2) {
+                if (speed < 0.5) {
                     const angle = Math.random() * Math.PI * 2;
-                    const boost = 0.2 + Math.random() * 0.1;
-                    ball.velocityX = Math.cos(angle) * boost;
-                    ball.velocityY = Math.sin(angle) * boost;
+                    const boost = 0.5 + Math.random() * 0.5;
+                    ball.velocityX += Math.cos(angle) * boost * 0.1;
+                    ball.velocityY += Math.sin(angle) * boost * 0.1;
                 }
             }
-            
-            // 최대 속도 제한
-            const maxSpeed = drawingInProgress ? 2.5 : 1.2;
-            const currentSpeed = Math.sqrt(ball.velocityX * ball.velocityX + ball.velocityY * ball.velocityY);
-            if (currentSpeed > maxSpeed) {
-                ball.velocityX = (ball.velocityX / currentSpeed) * maxSpeed;
-                ball.velocityY = (ball.velocityY / currentSpeed) * maxSpeed;
+        } 
+        // 추첨 종료 후 물리
+        else {
+            if (!ball.settled) {
+                // 중력 적용
+                ball.velocityY += gravity;
+                
+                // 속도 적용
+                ball.posX += ball.velocityX;
+                ball.posY += ball.velocityY;
+                
+                // 바닥 충돌
+                if (ball.posY + ballRadius > floorY) {
+                    ball.posY = floorY - ballRadius;
+                    
+                    // 바닥 반발력 (점점 약해지도록)
+                    if (Math.abs(ball.velocityY) > 0.2) {
+                        ball.velocityY = -ball.velocityY * 0.6; // 강한 감쇠
+                    } else {
+                        ball.velocityY = 0; // 충분히 작으면 정지
+                        ball.settled = true;  // 정착 상태로 설정
+                    }
+                    
+                    // X축 마찰
+                    ball.velocityX *= friction;
+                }
+                
+                // 좌우 벽 충돌 (원형 컨테이너 가장자리)
+                const distFromCenter = Math.sqrt(
+                    Math.pow(ball.posX - centerX, 2) + 
+                    Math.pow(ball.posY - centerY, 2)
+                );
+                
+                if (distFromCenter + ballRadius > maxRadius) {
+                    // X방향으로만 반사 (바닥에 가라앉도록)
+                    const angle = Math.atan2(ball.posY - centerY, ball.posX - centerX);
+                    ball.posX = centerX + (maxRadius - ballRadius) * Math.cos(angle);
+                    
+                    // X 속도만 반사하고 감쇠
+                    ball.velocityX = -ball.velocityX * 0.7;
+                }
+            } else {
+                // 이미 정착된 상태면 움직임 없음
+                ball.velocityX = 0;
+                ball.velocityY = 0;
             }
+        }
+        
+        // 볼 간 충돌 검사 및 처리
+        balls.forEach(otherBall => {
+            if (ball === otherBall || !otherBall.element || otherBall.selected) return;
             
-            // 위치 업데이트
-            element.style.left = (ball.posX - element.offsetWidth / 2) + 'px';
-            element.style.top = (ball.posY - element.offsetHeight / 2) + 'px';
+            const dx = ball.posX - otherBall.posX;
+            const dy = ball.posY - otherBall.posY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const minDistance = ballRadius * 2; // 두 볼 반지름 합
+            
+            if (distance < minDistance) {
+                // 충돌 발생 - 볼 분리
+                const overlap = minDistance - distance;
+                
+                // 충돌 방향 벡터
+                let normalX = dx;
+                let normalY = dy;
+                
+                // 0으로 나누기 방지
+                if (distance > 0) {
+                    normalX /= distance;
+                    normalY /= distance;
+                } else {
+                    // 정확히 같은 위치면 랜덤 방향으로 밀어냄
+                    const randomAngle = Math.random() * Math.PI * 2;
+                    normalX = Math.cos(randomAngle);
+                    normalY = Math.sin(randomAngle);
+                }
+                
+                // 볼 위치 조정 (겹침 해결)
+                const pushX = normalX * overlap * 0.5;
+                const pushY = normalY * overlap * 0.5;
+                
+                ball.posX += pushX;
+                ball.posY += pushY;
+                otherBall.posX -= pushX;
+                otherBall.posY -= pushY;
+                
+                // 속도 변화 계산 (충돌 시 운동량 교환)
+                if (!ball.settled && !otherBall.settled) {
+                    const dotProduct = 
+                        (ball.velocityX - otherBall.velocityX) * normalX + 
+                        (ball.velocityY - otherBall.velocityY) * normalY;
+                    
+                    // 충돌 후 속도 계산
+                    const impulseFactor = dotProduct;
+                    
+                    ball.velocityX -= normalX * impulseFactor;
+                    ball.velocityY -= normalY * impulseFactor;
+                    otherBall.velocityX += normalX * impulseFactor;
+                    otherBall.velocityY += normalY * impulseFactor;
+                    
+                    // 에너지 손실
+                    ball.velocityX *= damping;
+                    ball.velocityY *= damping;
+                    otherBall.velocityX *= damping;
+                    otherBall.velocityY *= damping;
+                }
+            }
         });
         
-        animationFrameId = requestAnimationFrame(animateBalls);
-    }
+        // 위치 적용
+        element.style.left = (ball.posX - ballRadius) + 'px';
+        element.style.top = (ball.posY - ballRadius) + 'px';
+    });
+    
+    animationFrameId = requestAnimationFrame(animateBalls);
+}
  
      // 로또 번호 뽑기 (6개)
      function generateLottoNumbers() {
@@ -599,112 +672,112 @@
          }
      }
  
-     // 로또 추첨 실행 (사운드 추가)
-     async function drawLottery() {
-         if (drawingInProgress) return;
- 
-         const {startBtn} = machineElements;
- 
-         drawingInProgress = true;
-         startBtn.disabled = true;
- 
-         // 기존 결과 초기화
-         machineElements.resultContainer.innerHTML = '';
- 
-         // 선택된 조합 유형 가져오기
-         const selectedType = document.querySelector('input[name="numberCount"]:checked').value;
-         const lottoNumbers = generateLottoNumbers();
- 
-         // 강화된 애니메이션 시작
-         enhancedAnimation();
- 
-         // 속도모드에 따른 지연 시간 조정
-         const animationDelay = 3000 / speedMode;
-         await new Promise(resolve => setTimeout(resolve, animationDelay));
- 
-         if (selectedType === "single") {
-             // 단일 세트 처리
-             const setContainer = document.createElement('div');
-             setContainer.className = 'result-set';
-             machineElements.resultContainer.appendChild(setContainer);
-             
-             // 각 번호 순차적으로 추첨
-             for (let i = 0; i < lottoNumbers.length; i++) {
-                 const number = lottoNumbers[i];
- 
-                 // 첫 공 이후에는 속도모드에 따른 간격
-                 if (i > 0) {
-                     const ballDelay = 500 / speedMode;
-                     await new Promise(resolve => setTimeout(resolve, ballDelay));
-                 }
- 
-                 // 공 선택하고 빠져나가는 애니메이션
-                 await selectBall(number);
-                 showResult(number, setContainer);
- 
-                 // 마지막 번호일 경우 추첨 완료 사운드 재생
-                 if (i === lottoNumbers.length - 1) {
-                     machineSound.pause(); // 추첨기 소리 중지
-                     playSound(resultSound); // 당첨 소리 재생
-                 }
-             }
-         } else {
-             // 5세트 처리
-             for (let setIndex = 0; setIndex < lottoNumbers.length; setIndex++) {
-                 const set = lottoNumbers[setIndex];
-                 
-                 // 세트 컨테이너 생성
-                 const setContainer = document.createElement('div');
-                 setContainer.className = 'result-set';
-                 
-                 // 세트 번호 표시
-                 const setNumber = document.createElement('div');
-                 setNumber.className = 'set-number';
-                 setNumber.textContent = setIndex + 1;
-                 setContainer.appendChild(setNumber);
-                 
-                 machineElements.resultContainer.appendChild(setContainer);
-                 
-                 // 각 번호 순차적으로 추첨
-                 for (let i = 0; i < set.length; i++) {
-                     const number = set[i];
- 
-                     // 첫 공 이후에는 속도모드에 따른 간격
-                     if (i > 0) {
-                         const ballDelay = 300 / speedMode;
-                         await new Promise(resolve => setTimeout(resolve, ballDelay));
-                     }
- 
-                     // 공 선택하고 빠져나가는 애니메이션
-                     await selectBall(number);
-                     showResult(number, setContainer);
- 
-                     // 마지막 세트의 마지막 번호일 경우 추첨 완료 사운드 재생
-                     if (setIndex === lottoNumbers.length - 1 && i === set.length - 1) {
-                         machineSound.pause(); // 추첨기 소리 중지
-                         playSound(resultSound); // 당첨 소리 재생
-                     }
-                 }
-                 
-                 // 세트 사이에 약간의 딜레이 (속도모드에 따라 조정)
-                 if (setIndex < lottoNumbers.length - 1) {
-                     const setDelay = 1000 / speedMode;
-                     await new Promise(resolve => setTimeout(resolve, setDelay));
-                     
-                     // 추첨기 초기화
-                     balls.forEach(ball => {
-                         if (ball.selected) {
-                             ball.selected = false;
-                         }
-                     });
-                 }
-             }
-         }
- 
-         // 추첨 완료 후 버튼 활성화
-         startBtn.disabled = false;
-         drawingInProgress = false;
-     }
+// 로또 추첨 함수 마지막에 finishDrawing 호출 추가
+async function drawLottery() {
+    if (drawingInProgress) return;
+
+    const {startBtn} = machineElements;
+
+    drawingInProgress = true;
+    startBtn.disabled = true;
+
+    // 기존 결과 초기화
+    machineElements.resultContainer.innerHTML = '';
+
+    // 선택된 조합 유형 가져오기
+    const selectedType = document.querySelector('input[name="numberCount"]:checked').value;
+    const lottoNumbers = generateLottoNumbers();
+
+    // 강화된 애니메이션 시작
+    enhancedAnimation();
+
+    // 속도모드에 따른 지연 시간 조정
+    const animationDelay = 3000 / speedMode;
+    await new Promise(resolve => setTimeout(resolve, animationDelay));
+
+    if (selectedType === "single") {
+        // 단일 세트 처리
+        const setContainer = document.createElement('div');
+        setContainer.className = 'result-set';
+        machineElements.resultContainer.appendChild(setContainer);
+        
+        // 각 번호 순차적으로 추첨
+        for (let i = 0; i < lottoNumbers.length; i++) {
+            const number = lottoNumbers[i];
+
+            // 첫 공 이후에는 속도모드에 따른 간격
+            if (i > 0) {
+                const ballDelay = 500 / speedMode;
+                await new Promise(resolve => setTimeout(resolve, ballDelay));
+            }
+
+            // 공 선택하고 빠져나가는 애니메이션
+            await selectBall(number);
+            showResult(number, setContainer);
+
+            // 마지막 번호일 경우 추첨 완료 사운드 재생
+            if (i === lottoNumbers.length - 1) {
+                machineSound.pause(); // 추첨기 소리 중지
+                finishDrawing(); // 추첨 종료 함수 호출
+            }
+        }
+    } else {
+        // 5세트 처리
+        for (let setIndex = 0; setIndex < lottoNumbers.length; setIndex++) {
+            const set = lottoNumbers[setIndex];
+            
+            // 세트 컨테이너 생성
+            const setContainer = document.createElement('div');
+            setContainer.className = 'result-set';
+            
+            // 세트 번호 표시
+            const setNumber = document.createElement('div');
+            setNumber.className = 'set-number';
+            setNumber.textContent = setIndex + 1;
+            setContainer.appendChild(setNumber);
+            
+            machineElements.resultContainer.appendChild(setContainer);
+            
+            // 각 번호 순차적으로 추첨
+            for (let i = 0; i < set.length; i++) {
+                const number = set[i];
+
+                // 첫 공 이후에는 속도모드에 따른 간격
+                if (i > 0) {
+                    const ballDelay = 300 / speedMode;
+                    await new Promise(resolve => setTimeout(resolve, ballDelay));
+                }
+
+                // 공 선택하고 빠져나가는 애니메이션
+                await selectBall(number);
+                showResult(number, setContainer);
+
+                // 마지막 세트의 마지막 번호일 경우
+                if (setIndex === lottoNumbers.length - 1 && i === set.length - 1) {
+                    machineSound.pause(); // 추첨기 소리 중지
+                    finishDrawing(); // 추첨 종료 함수 호출
+                }
+            }
+            
+            // 세트 사이에 약간의 딜레이 (속도모드에 따라 조정)
+            if (setIndex < lottoNumbers.length - 1) {
+                const setDelay = 1000 / speedMode;
+                await new Promise(resolve => setTimeout(resolve, setDelay));
+                
+                // 추첨기 초기화
+                balls.forEach(ball => {
+                    if (ball.selected) {
+                        ball.selected = false;
+                    }
+                });
+            }
+        }
+    }
+
+    // 추첨 완료 후 버튼 활성화
+    startBtn.disabled = false;
+    drawingInProgress = false;
+}
  
      // 사운드 토글 기능 개선
      function toggleSound() {
@@ -1015,31 +1088,50 @@
          });
      }
  
-     // finishDrawing 함수가 있다면 여기서도 resetBtn 관련 코드 제거
-     function finishDrawing() {
-         // 애니메이션 초기화
-         const machineBody = document.querySelector('.machine-body');
-         if (machineBody) machineBody.classList.remove('shake-hard');
-         
-         const airEffect = document.getElementById('airEffect');
-         if (airEffect) airEffect.classList.remove('air-strong');
-         
-         const fan = document.querySelector('.fan');
-         if (fan) fan.style.animationDuration = '0.5s';
-         
-         // 사운드 중지
-         if (soundEnabled) {
-             machineSound.pause();
-             machineSound.currentTime = 0;
-         }
-         
-         // 결과음 재생
-         playSound(resultSound);
-         
-         // 상태 초기화
-         drawingInProgress = false;
-         document.getElementById('startBtn').disabled = false;
-     }
+// 추첨 완료 함수 개선
+function finishDrawing() {
+    drawingInProgress = false;
+    document.getElementById('startBtn').disabled = false;
+    
+    // 추첨이 끝나면 공기 효과 제거
+    const airEffect = document.getElementById('airEffect');
+    if (airEffect) {
+        airEffect.classList.remove('air-strong');
+        airEffect.style.display = 'none'; // 완전히 숨김
+    }
+    
+    // 팬 효과 감소
+    const fan = document.querySelector('.fan');
+    if (fan) {
+        fan.style.animationDuration = '3s'; // 매우 느리게
+        fan.style.opacity = '0.2'; // 거의 안 보이게
+    }
+    
+    // 진동 효과 제거
+    const machineBody = document.querySelector('.machine-body');
+    if (machineBody) machineBody.classList.remove('shake-hard');
+    
+    // 사운드 처리
+    if (soundEnabled) {
+        machineSound.pause();
+        machineSound.currentTime = 0;
+        playSound(resultSound);
+    }
+    
+    // 모든 볼의 상태 재설정 (바닥으로 떨어지게)
+    balls.forEach(ball => {
+        if (!ball.selected) {
+            // 정착 상태 초기화하여 새로운 중력 적용 시작
+            ball.settled = false;
+            
+            // 약간의 초기 속도 추가 (더 자연스러운 낙하)
+            ball.velocityX *= 0.3; // 현재 속도 감소
+            ball.velocityY = 0;    // Y속도는 중력에 맡김
+        }
+    });
+    
+    console.log('추첨 종료: 볼들이 바닥으로 가라앉습니다');
+}
  
      // 번호 저장 함수
      function saveNumbers(numbers) {
