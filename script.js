@@ -653,7 +653,7 @@ function animateBalls() {
              // 저장 버튼 추가
              const saveBtn = document.createElement('button');
              saveBtn.className = 'save-numbers-btn';
-             saveBtn.textContent = '번호 저장';
+             saveBtn.textContent = '저장';
              saveBtn.onclick = function() {
                  // 현재 세트의 번호 추출
                  const numbers = Array.from(container.querySelectorAll('.result-ball'))
@@ -1088,7 +1088,7 @@ async function drawLottery() {
          });
      }
  
-// 추첨 완료 함수 개선
+// 추첨 완료 함수 개선 - 일괄 저장 버튼 추가
 function finishDrawing() {
     drawingInProgress = false;
     document.getElementById('startBtn').disabled = false;
@@ -1130,7 +1130,75 @@ function finishDrawing() {
         }
     });
     
+    // 추첨 결과 일괄 저장 버튼 추가
+    const resultContainer = document.getElementById('resultContainer');
+    
+    // 이미 일괄 저장 버튼이 있다면 제거
+    const existingBatchSaveBtn = document.querySelector('.batch-save-btn');
+    if (existingBatchSaveBtn) {
+        existingBatchSaveBtn.remove();
+    }
+    
+    // 결과 세트들이 있는지 확인
+    const resultSets = resultContainer.querySelectorAll('.result-set');
+    if (resultSets.length > 0) {
+        // 일괄 저장 버튼 생성
+        const batchSaveBtn = document.createElement('button');
+        batchSaveBtn.className = 'batch-save-btn';
+        batchSaveBtn.textContent = '모든 번호 일괄 저장';
+        batchSaveBtn.onclick = saveAllNumbers;
+        
+        // 결과 컨테이너에 버튼 추가 (가장 마지막에 추가)
+        resultContainer.appendChild(batchSaveBtn);
+    }
+    
     console.log('추첨 종료: 볼들이 바닥으로 가라앉습니다');
+}
+
+// 모든 추첨 결과 일괄 저장 함수
+function saveAllNumbers() {
+    const resultSets = document.querySelectorAll('.result-set');
+    let savedCount = 0;
+    
+    resultSets.forEach(setContainer => {
+        // 이미 저장된 세트는 건너뛰기
+        const existingSaveBtn = setContainer.querySelector('.save-numbers-btn');
+        if (existingSaveBtn && existingSaveBtn.disabled) {
+            return;
+        }
+        
+        // 번호 추출
+        const numbers = Array.from(setContainer.querySelectorAll('.result-ball'))
+            .map(ball => parseInt(ball.textContent))
+            .sort((a, b) => a - b);
+        
+        // 유효한 번호 세트인지 확인 (6개 번호가 모두 있는지)
+        if (numbers.length === 6) {
+            // 번호 저장
+            saveNumbers(numbers);
+            savedCount++;
+            
+            // 저장 버튼이 있으면 비활성화
+            if (existingSaveBtn) {
+                existingSaveBtn.disabled = true;
+                existingSaveBtn.textContent = '저장됨';
+            }
+        }
+    });
+    
+    // 일괄 저장 버튼 비활성화
+    const batchSaveBtn = document.querySelector('.batch-save-btn');
+    if (batchSaveBtn) {
+        batchSaveBtn.disabled = true;
+        batchSaveBtn.textContent = `${savedCount}개 세트 저장됨`;
+        
+        // 2초 후 버튼 텍스트 원복
+        setTimeout(() => {
+            if (batchSaveBtn && document.body.contains(batchSaveBtn)) {
+                batchSaveBtn.textContent = '모든 번호 일괄 저장';
+            }
+        }, 2000);
+    }
 }
  
      // 번호 저장 함수
@@ -1161,8 +1229,6 @@ function finishDrawing() {
          // 로컬 저장소에 저장
          localStorage.setItem('lottoSavedNumbers', JSON.stringify(savedNumbers));
          
-         // 알림 표시
-         alert('번호가 저장되었습니다!');
      }
  
      // 저장된 번호 로드
@@ -1184,70 +1250,100 @@ function finishDrawing() {
          showSavedNumbers();
      }
  
-     // 저장된 번호 표시 함수
-     function showSavedNumbers() {
-         // 모달 요소 가져오기
-         const modal = document.getElementById('savedNumbersModal');
-         const modalBody = document.getElementById('savedNumbersList');
-         
-         // 저장된 번호 로드
-         loadSavedNumbers();
-         
-         // 모달 내용 초기화
-         modalBody.innerHTML = '';
-         
-         // 저장된 번호가 없는 경우
-         if (savedNumbers.length === 0) {
-             modalBody.innerHTML = '<p style="text-align: center; color: #aaa;">저장된 번호가 없습니다.</p>';
-             modal.style.display = 'block';
-             return;
-         }
-         
-         // 각 저장된 항목 표시
-         savedNumbers.forEach(item => {
-             const itemElement = document.createElement('div');
-             itemElement.className = 'saved-number-item';
-             
-             // 날짜 표시
-             const dateElement = document.createElement('div');
-             dateElement.className = 'saved-date';
-             dateElement.textContent = item.date;
-             
-             // 번호 표시 컨테이너
-             const ballsContainer = document.createElement('div');
-             ballsContainer.className = 'saved-balls-container';
-             
-             // 각 번호 표시
-             item.numbers.forEach(number => {
-                 const ball = document.createElement('div');
-                 ball.className = 'saved-ball';
-                 ball.textContent = number;
-                 ball.style.backgroundColor = getBallColor(number);
-                 ballsContainer.appendChild(ball);
-             });
-             
-             // 삭제 버튼
-             const deleteBtn = document.createElement('button');
-             deleteBtn.className = 'delete-btn';
-             deleteBtn.textContent = '삭제';
-             deleteBtn.onclick = function() {
-                 if (confirm('이 번호를 삭제하시겠습니까?')) {
-                     deleteSavedNumber(item.id);
-                 }
-             };
-             
-             // 항목에 요소 추가
-             itemElement.appendChild(dateElement);
-             itemElement.appendChild(ballsContainer);
-             itemElement.appendChild(deleteBtn);
-             
-             // 목록에 항목 추가
-             modalBody.appendChild(itemElement);
-         });
-         
-         // 모달 표시
-         modal.style.display = 'block';
-     }
+    // 저장된 번호 표시 함수 - 일괄 삭제 버튼 추가
+    function showSavedNumbers() {
+        // 모달 요소 가져오기
+        const modal = document.getElementById('savedNumbersModal');
+        const modalBody = document.getElementById('savedNumbersList');
+        
+        // 저장된 번호 로드
+        loadSavedNumbers();
+        
+        // 모달 내용 초기화
+        modalBody.innerHTML = '';
+        
+        // 저장된 번호가 없는 경우
+        if (savedNumbers.length === 0) {
+            modalBody.innerHTML = '<p style="text-align: center; color: #aaa;">저장된 번호가 없습니다.</p>';
+            modal.style.display = 'block';
+            return;
+        }
+        
+        // 일괄 삭제 버튼 추가
+        const batchDeleteContainer = document.createElement('div');
+        batchDeleteContainer.className = 'batch-action-container';
+        batchDeleteContainer.style.marginBottom = '20px';
+        batchDeleteContainer.style.textAlign = 'right';
+        
+        const batchDeleteBtn = document.createElement('button');
+        batchDeleteBtn.className = 'batch-delete-btn';
+        batchDeleteBtn.textContent = '모든 번호 일괄 삭제';
+        batchDeleteBtn.onclick = function() {
+            if (confirm('저장된 모든 번호를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) {
+                deleteAllSavedNumbers();
+            }
+        };
+        
+        batchDeleteContainer.appendChild(batchDeleteBtn);
+        modalBody.appendChild(batchDeleteContainer);
+        
+        // 각 저장된 항목 표시
+        savedNumbers.forEach(item => {
+            const itemElement = document.createElement('div');
+            itemElement.className = 'saved-number-item';
+            
+            // 날짜 표시
+            const dateElement = document.createElement('div');
+            dateElement.className = 'saved-date';
+            dateElement.textContent = item.date;
+            
+            // 번호 표시 컨테이너
+            const ballsContainer = document.createElement('div');
+            ballsContainer.className = 'saved-balls-container';
+            
+            // 각 번호 표시
+            item.numbers.forEach(number => {
+                const ball = document.createElement('div');
+                ball.className = 'saved-ball';
+                ball.textContent = number;
+                ball.style.backgroundColor = getBallColor(number);
+                ballsContainer.appendChild(ball);
+            });
+            
+            // 삭제 버튼
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.textContent = '삭제';
+            deleteBtn.onclick = function() {
+                if (confirm('이 번호를 삭제하시겠습니까?')) {
+                    deleteSavedNumber(item.id);
+                }
+            };
+            
+            // 항목에 요소 추가
+            itemElement.appendChild(dateElement);
+            itemElement.appendChild(ballsContainer);
+            itemElement.appendChild(deleteBtn);
+            
+            // 목록에 항목 추가
+            modalBody.appendChild(itemElement);
+        });
+        
+        // 모달 표시
+        modal.style.display = 'block';
+    }
+    
+    // 모든 저장된 번호 삭제 함수 추가
+    function deleteAllSavedNumbers() {
+        // 저장된 번호 배열 초기화
+        savedNumbers = [];
+        
+        // 로컬 스토리지에서 삭제
+        localStorage.removeItem('lottoSavedNumbers');
+        
+        // 모달 다시 표시
+        showSavedNumbers();
+    }
  
      // 당첨번호 입력 모달 초기화
      function initWinningNumbersModal() {
