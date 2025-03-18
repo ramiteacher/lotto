@@ -1496,43 +1496,70 @@
          resultsContainer.innerHTML = html;
      }
  
-     // 동행복권 최신 당첨번호를 가져오는 함수 (API 활용)
+     // 동행복권 최신 당첨번호를 가져오는 함수 (CORS 문제 해결)
 async function fetchLatestWinningNumbers() {
     try {
         // 로딩 표시 추가
         const container = document.getElementById('currentWinningNumbers');
         container.innerHTML = '<div class="loading">최신 당첨번호를 가져오는 중입니다...</div>';
         
+        // 프록시 서버를 통한 요청 (CORS 우회)
+        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+        const targetUrl = 'https://www.dhlottery.co.kr/common.do?method=getLottoNumber';
+        
         // 현재 날짜 기준 추정 회차 계산
-        // 1회차 추첨일: 2002년 12월 7일
         const firstDrawDate = new Date('2002-12-07');
         const today = new Date();
         const diffTime = Math.abs(today - firstDrawDate);
-        const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const diffWeeks = Math.floor(diffDays / 7);
         const estimatedCurrentRound = diffWeeks + 1;
         
-        // 최근 3회차를 시도하여 가장 최근 유효한 회차 찾기
+        console.log("추정 현재 회차:", estimatedCurrentRound);
+        
+        // 최근 5개 회차를 시도
         let latestData = null;
         let latestRound = 0;
         
         for (let i = 0; i < 5; i++) {
             const round = estimatedCurrentRound - i;
             try {
-                const response = await fetch(`https://www.dhlottery.co.kr/common.do?method=getLottoNumber&drwNo=${round}`);
-                const data = await response.json();
+                console.log(`${round}회차 조회 시도 중...`);
                 
-                if (data.returnValue === 'success') {
+                // CORS 프록시를 통한 요청
+                const response = await fetch(`${proxyUrl}${targetUrl}&drwNo=${round}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'  // CORS-Anywhere 요구사항
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log(`${round}회차 응답:`, data);
+                
+                if (data && data.returnValue === 'success') {
                     latestData = data;
                     latestRound = round;
                     break;
                 }
             } catch (e) {
-                console.log(`${round}회차 조회 실패:`, e);
+                console.error(`${round}회차 조회 실패:`, e);
+                
+                // CORS 관련 오류 발생 시 대체 방법 시도
+                if (e.message.includes('CORS') || e.message.includes('Failed to fetch')) {
+                    console.log("CORS 오류 감지, 대체 방법 시도...");
+                    return await fetchWinningNumbersWithoutCORS(round);
+                }
             }
         }
         
         if (!latestData) {
-            throw new Error('최근 당첨번호를 찾을 수 없습니다');
+            // CORS 문제일 가능성이 높으므로 대체 방법 시도
+            console.log("API에서 데이터를 가져올 수 없습니다. 대체 방법 시도...");
+            return await fetchWinningNumbersWithoutCORS(estimatedCurrentRound);
         }
         
         // 당첨번호 추출
@@ -1543,10 +1570,11 @@ async function fetchLatestWinningNumbers() {
             latestData.drwtNo4,
             latestData.drwtNo5,
             latestData.drwtNo6
-        ];
+        ].sort((a, b) => a - b);  // 정렬 적용
+        
         const bonusNumber = latestData.bnusNo;
         
-        // 추첨일자 형식 변환 (YYYY-MM-DD -> YYYY년 MM월 DD일)
+        // 추첨일자 형식 변환
         const drawDate = new Date(latestData.drwNoDate);
         const formattedDate = drawDate.toLocaleDateString('ko-KR', {
             year: 'numeric',
@@ -1589,21 +1617,47 @@ async function fetchLatestWinningNumbers() {
     } catch (error) {
         console.error('당첨번호 가져오기 실패:', error);
         
-        // 에러 메시지 표시
-        const container = document.getElementById('currentWinningNumbers');
-        container.innerHTML = '<div class="error">당첨번호를 가져오는 중 오류가 발생했습니다.<br>' + 
-            '네트워크 연결을 확인하거나 수동으로 입력해 주세요.<br>' +
-            '오류: ' + error.message + '</div>';
-        
-        return { success: false, error: error.message };
+        // 대체 방법 시도
+        try {
+            return await fetchWinningNumbersWithoutCORS();
+        } catch (fallbackError) {
+            // 모든 방법 실패 시 에러 메시지 표시
+            const container = document.getElementById('currentWinningNumbers');
+            container.innerHTML = `<div class="error">당첨번호를 가져오는 중 오류가 발생했습니다.<br>
+                네트워크 연결을 확인하거나 수동으로 입력해 주세요.<br>
+                오류: ${error.message}</div>`;
+            
+            return { success: false, error: error.message };
+        }
     }
 }
 
-// 모든 회차의 당첨번호를 가져오는 함수 (특정 회차 지정 가능)
+// 특정 회차의 당첨번호를 가져오는 함수 (CORS 문제 해결)
 async function fetchLottoNumberByRound(round) {
     try {
-        const response = await fetch(`https://www.dhlottery.co.kr/common.do?method=getLottoNumber&drwNo=${round}`);
+        // 로딩 표시 추가
+        const container = document.getElementById('currentWinningNumbers');
+        container.innerHTML = '<div class="loading">당첨번호를 가져오는 중입니다...</div>';
+        
+        // 프록시 서버를 통한 요청 (CORS 우회)
+        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+        const targetUrl = 'https://www.dhlottery.co.kr/common.do?method=getLottoNumber';
+        
+        console.log(`${round}회차 조회 시도 중...`);
+        
+        // CORS 프록시를 통한 요청
+        const response = await fetch(`${proxyUrl}${targetUrl}&drwNo=${round}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'  // CORS-Anywhere 요구사항
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log(`${round}회차 응답:`, data);
         
         if (data.returnValue !== 'success') {
             throw new Error(`${round}회차 당첨번호를 찾을 수 없습니다`);
@@ -1625,6 +1679,13 @@ async function fetchLottoNumberByRound(round) {
         };
     } catch (error) {
         console.error(`${round}회차 당첨번호 가져오기 실패:`, error);
+        
+        // 에러 메시지 표시
+        const container = document.getElementById('currentWinningNumbers');
+        container.innerHTML = `<div class="error">당첨번호를 가져오는 중 오류가 발생했습니다.<br>
+            네트워크 연결을 확인하거나 수동으로 입력해 주세요.<br>
+            오류: ${error.message}</div>`;
+            
         return { success: false, error: error.message };
     }
 }
