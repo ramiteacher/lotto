@@ -1050,3 +1050,46 @@ button:disabled {
     justify-content: flex-end;
     margin-bottom: 20px;
 }
+
+/* 스타일시트에 추가할 CSS */
+.skip-btn {
+    background-color: #ff7272;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    margin-left: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.skip-btn:before {
+    content: '';
+    background-color: rgba(255,255,255,0.2);
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    transition: all 0.4s;
+}
+
+.skip-btn:hover:before {
+    left: 0;
+}
+
+.skip-btn:hover {
+    background-color: #ff5252;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(255,82,82,0.3);
+}
+
+.skip-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
